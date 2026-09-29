@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </svg>
           </div>
           <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 group-hover:text-[#FF2D55] transition-colors">
-            Cùng Làm
+            J-Network
           </span>
         </button>
 
