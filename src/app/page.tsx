@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { Navbar } from '../components/Navbar';
 import { HeroSection } from '../components/HeroSection';
 import { PillarsSection } from '../components/PillarsSection';
@@ -37,6 +39,65 @@ export default function HomePage() {
     isOpen: false,
     defaultTab: 'principles',
   });
+
+  // Real-time synchronization with Firestore opportunities
+  useEffect(() => {
+    try {
+      const oppsRef = collection(db, 'opportunities');
+      const q = query(oppsRef);
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const firestoreItems: OpportunityItem[] = snapshot.docs.map((docSnap) => {
+              const d = docSnap.data();
+              const cat = (['project', 'resource', 'space', 'partner'].includes(d.category)
+                ? d.category
+                : 'project') as OpportunityItem['category'];
+              const categoryLabels: Record<OpportunityItem['category'], OpportunityItem['categoryLabel']> = {
+                project: 'Dự án & ý tưởng',
+                resource: 'Nguồn lực hợp tác',
+                space: 'Không gian chia sẻ',
+                partner: 'Cộng đồng chuyên môn',
+              };
+              return {
+                id: docSnap.id,
+                category: cat,
+                categoryLabel: categoryLabels[cat] || 'Dự án & ý tưởng',
+                title: d.title || 'Cơ hội hợp tác mới',
+                location: d.location || 'Toàn quốc',
+                resourceHighlight: d.reward || 'Nguồn lực sẵn có',
+                cooperationType: d.scale || 'Hợp tác cùng phát triển',
+                imageUrl:
+                  d.imageUrl ||
+                  (cat === 'space'
+                    ? 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80'
+                    : 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80'),
+                whatIHave: d.whatIHave || 'Có ý tưởng và nguồn lực ban đầu',
+                whatINeed: d.whatINeed || 'Tìm cộng sự và đối tác cùng triển khai',
+                detailedDescription: d.description || d.title,
+                creatorName: d.ownerName || 'Thành viên Cùng Làm',
+                creatorRole: 'Người khởi tạo',
+                createdTime: 'Mới cập nhật',
+                isBookmarked: false,
+              };
+            });
+
+            // Merge firestore items with initial opportunities
+            const existingIds = new Set(firestoreItems.map((item) => item.id));
+            const filteredInitial = INITIAL_OPPORTUNITIES.filter((item) => !existingIds.has(item.id));
+            setOpportunities([...firestoreItems, ...filteredInitial]);
+          }
+        },
+        (error) => {
+          console.warn('Lỗi lắng nghe opportunities từ Firestore:', error);
+        }
+      );
+      return () => unsubscribe();
+    } catch (err) {
+      console.warn('Khởi tạo Firestore listener thất bại:', err);
+    }
+  }, []);
 
   // User notification banner
   const [toastMessage, setToastMessage] = useState<string | null>(null);
