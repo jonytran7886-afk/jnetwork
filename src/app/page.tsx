@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
+import { db, auth } from '../lib/firebase';
 import { Navbar } from '../components/Navbar';
 import { HeroSection } from '../components/HeroSection';
 import { PillarsSection } from '../components/PillarsSection';
@@ -16,6 +17,7 @@ import { OpportunityDetailModal } from '../components/OpportunityDetailModal';
 import { PostDemandModal } from '../components/PostDemandModal';
 import { AuthModal } from '../components/AuthModal';
 import { CommunityPrinciplesModal } from '../components/CommunityPrinciplesModal';
+import { MemberHubModal } from '../components/MemberHubModal';
 import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
 
 export default function HomePage() {
@@ -24,8 +26,18 @@ export default function HomePage() {
   const [selectedOpportunityCategory, setSelectedOpportunityCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Modals state
+  // Authentication & Hub state
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [memberHubState, setMemberHubState] = useState<{
+    isOpen: boolean;
+    tab: 'opportunities' | 'invitations' | 'messages';
+  }>({
+    isOpen: false,
+    tab: 'opportunities',
+  });
+
+  // Modals state
   const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
   const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
@@ -39,6 +51,17 @@ export default function HomePage() {
     isOpen: false,
     defaultTab: 'principles',
   });
+
+  // Auth state listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setFirebaseUser(user);
+      if (user?.displayName) {
+        setLoggedInUser(user.displayName);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Real-time synchronization with Firestore opportunities
   useEffect(() => {
@@ -80,6 +103,8 @@ export default function HomePage() {
                 creatorRole: 'Người khởi tạo',
                 createdTime: 'Mới cập nhật',
                 isBookmarked: false,
+                ownerId: d.ownerId,
+                status: d.status || 'active',
               };
             });
 
@@ -190,9 +215,11 @@ export default function HomePage() {
         userName={loggedInUser}
         onLogout={() => {
           setLoggedInUser(null);
+          setFirebaseUser(null);
           showToast('Bạn đã đăng xuất tài khoản.');
         }}
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
+        onOpenMemberHub={(tab) => setMemberHubState({ isOpen: true, tab: tab || 'opportunities' })}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
           else scrollToSection(id);
@@ -272,6 +299,17 @@ export default function HomePage() {
         opportunity={activeDetailItem}
         onClose={() => setActiveDetailItem(null)}
         onBookmarkToggle={handleBookmarkToggle}
+        currentUser={
+          firebaseUser
+            ? {
+                uid: firebaseUser.uid,
+                displayName: firebaseUser.displayName || 'Thành viên',
+                email: firebaseUser.email || '',
+                photoURL: firebaseUser.photoURL || undefined,
+              }
+            : null
+        }
+        onRequireAuth={() => setAuthModalState({ isOpen: true, mode: 'login' })}
       />
 
       {/* 2. Post Demand Modal */}
@@ -297,6 +335,25 @@ export default function HomePage() {
         isOpen={principlesModalState.isOpen}
         defaultTab={principlesModalState.defaultTab}
         onClose={() => setPrinciplesModalState({ ...principlesModalState, isOpen: false })}
+      />
+
+      {/* 5. Member Hub Modal (Opportunities, Invitations, Messages) */}
+      <MemberHubModal
+        isOpen={memberHubState.isOpen}
+        initialTab={memberHubState.tab}
+        onClose={() => setMemberHubState({ ...memberHubState, isOpen: false })}
+        currentUser={
+          firebaseUser
+            ? {
+                uid: firebaseUser.uid,
+                displayName: firebaseUser.displayName || 'Thành viên',
+                email: firebaseUser.email || '',
+                photoURL: firebaseUser.photoURL || undefined,
+              }
+            : null
+        }
+        onOpenPostDemand={() => setIsPostDemandOpen(true)}
+        onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
       />
 
       {/* Toast Notification */}

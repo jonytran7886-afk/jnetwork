@@ -14,6 +14,8 @@ export interface OpportunityItem {
   creatorRole: string;
   createdTime: string;
   isBookmarked?: boolean;
+  ownerId?: string;
+  status?: 'active' | 'closed' | 'paused';
 }
 
 export interface CommunityValueItem {

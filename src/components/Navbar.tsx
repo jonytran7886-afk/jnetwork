@@ -1,15 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, User as UserIcon } from 'lucide-react';
-import { auth, signOutUser } from '../lib/firebase';
+import { Menu, X, LogOut, User as UserIcon, FolderKanban, Inbox, MessageSquare } from 'lucide-react';
+import { auth, signOutUser, db } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
   onNavigateSection: (sectionId: string) => void;
   userName?: string | null;
   onLogout?: () => void;
+  onOpenMemberHub?: (tab?: 'opportunities' | 'invitations' | 'messages') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,9 +19,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateSection,
   userName,
   onLogout,
+  onOpenMemberHub,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [pendingInvCount, setPendingInvCount] = useState<number>(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,6 +31,24 @@ export const Navbar: React.FC<NavbarProps> = ({
     });
     return () => unsubscribe();
   }, []);
+
+  // Listen to pending invitations for badge
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    try {
+      const q = query(
+        collection(db, 'invitations'),
+        where('receiverId', '==', currentUser.uid),
+        where('status', '==', 'pending')
+      );
+      const unsub = onSnapshot(q, (snapshot) => {
+        setPendingInvCount(snapshot.size);
+      }, (err) => console.warn(err));
+      return () => unsub();
+    } catch (e) {
+      console.warn(e);
+    }
+  }, [currentUser?.uid]);
 
   const handleNavClick = (sectionId: string) => {
     onNavigateSection(sectionId);
@@ -97,33 +119,79 @@ export const Navbar: React.FC<NavbarProps> = ({
         </nav>
 
         {/* Right Action Buttons */}
-        <div className="hidden sm:flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-2.5">
           {displayName ? (
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5">
-              <div className="w-8 h-8 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
-                {currentUser?.photoURL ? (
-                  <img src={currentUser.photoURL} alt={displayName} className="w-full h-full object-cover" />
-                ) : (
-                  <UserIcon className="w-4 h-4 text-[#FF2D55]" />
-                )}
+            <>
+              {/* Quick Hub Navigation */}
+              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60">
+                <button
+                  type="button"
+                  onClick={() => onOpenMemberHub && onOpenMemberHub('opportunities')}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Quản lý cơ hội đã đăng"
+                >
+                  <FolderKanban className="w-3.5 h-3.5 text-[#FF2D55]" />
+                  <span>Cơ hội</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenMemberHub && onOpenMemberHub('invitations')}
+                  className="relative px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Lời mời hợp tác"
+                >
+                  <Inbox className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Lời mời</span>
+                  {pendingInvCount > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onOpenMemberHub && onOpenMemberHub('messages')}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 hover:bg-white rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  title="Tin nhắn trao đổi"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Tin nhắn</span>
+                </button>
               </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[130px]">
-                  {displayName}
-                </span>
-                <span className="text-[10px] text-emerald-600 font-semibold leading-none">
-                  Thành viên Cùng Làm
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                title="Đăng xuất"
-                className="ml-1 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+
+              {/* User Profile Badge */}
+              <div
+                onClick={() => onOpenMemberHub && onOpenMemberHub('opportunities')}
+                className="flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl px-3 py-1.5 cursor-pointer transition-colors"
+                title="Bấm để mở Bảng điều khiển thành viên"
               >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
+                  {currentUser?.photoURL ? (
+                    <img src={currentUser.photoURL} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon className="w-4 h-4 text-[#FF2D55]" />
+                  )}
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
+                    {displayName}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-semibold leading-none">
+                    Thành viên
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSignOut();
+                  }}
+                  title="Đăng xuất"
+                  className="ml-1 p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </>
           ) : (
             <>
               <button
@@ -192,8 +260,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
             {displayName ? (
               <div className="space-y-2">
-                <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="w-9 h-9 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
+                <div
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenMemberHub && onOpenMemberHub('opportunities');
+                  }}
+                  className="flex items-center gap-3 p-2.5 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:bg-slate-100"
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
                     {currentUser?.photoURL ? (
                       <img src={currentUser.photoURL} alt={displayName} className="w-full h-full object-cover" />
                     ) : (
@@ -205,13 +279,55 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <p className="text-xs text-emerald-600 font-medium">Thành viên Cùng Làm</p>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenMemberHub && onOpenMemberHub('opportunities');
+                    }}
+                    className="p-2 text-center bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex flex-col items-center gap-1"
+                  >
+                    <FolderKanban className="w-4 h-4 text-[#FF2D55]" />
+                    <span>Cơ hội</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenMemberHub && onOpenMemberHub('invitations');
+                    }}
+                    className="relative p-2 text-center bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex flex-col items-center gap-1"
+                  >
+                    <Inbox className="w-4 h-4 text-amber-500" />
+                    <span>Lời mời</span>
+                    {pendingInvCount > 0 && (
+                      <span className="absolute top-1 right-2 w-2 h-2 rounded-full bg-rose-500" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onOpenMemberHub && onOpenMemberHub('messages');
+                    }}
+                    className="p-2 text-center bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex flex-col items-center gap-1"
+                  >
+                    <MessageSquare className="w-4 h-4 text-indigo-500" />
+                    <span>Tin nhắn</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
                     handleSignOut();
                   }}
-                  className="w-full py-2.5 text-center text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-2.5 text-center text-sm font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2 mt-1"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Đăng xuất</span>
