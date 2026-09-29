@@ -42,6 +42,7 @@ export interface OpportunityDoc {
   location: string;
   scale: string;
   reward: string;
+  imageUrl?: string;
   status: 'active' | 'closed' | 'paused';
   createdAt?: any;
   updatedAt?: any;

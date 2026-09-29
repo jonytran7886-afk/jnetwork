@@ -317,6 +317,7 @@ export default function HomePage() {
         isOpen={isPostDemandOpen}
         onClose={() => setIsPostDemandOpen(false)}
         onAddOpportunity={handleAddOpportunity}
+        usedImageUrls={opportunities.map((item) => item.imageUrl)}
       />
 
       {/* 3. Auth Modal */}

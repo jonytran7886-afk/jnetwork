@@ -8,7 +8,7 @@ import {
   Users,
   ArrowRight
 } from 'lucide-react';
-import { OpportunityItem } from '../data/opportunitiesData';
+import { OpportunityItem, pickOpportunityImage } from '../data/opportunitiesData';
 import { auth } from '../lib/firebase';
 import { createOpportunity } from '../lib/firestoreService';
 
@@ -16,12 +16,14 @@ interface PostDemandModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddOpportunity: (newItem: OpportunityItem) => void;
+  usedImageUrls?: string[];
 }
 
 export const PostDemandModal: React.FC<PostDemandModalProps> = ({
   isOpen,
   onClose,
   onAddOpportunity,
+  usedImageUrls = [],
 }) => {
   const [category, setCategory] = useState<'project' | 'resource' | 'space' | 'partner'>('project');
   const [title, setTitle] = useState('');
@@ -43,13 +45,6 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
     partner: 'Cộng đồng chuyên môn',
   } as const;
 
-  const categoryImages = {
-    project: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80',
-    resource: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=80',
-    space: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
-    partner: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !contactName.trim()) return;
@@ -62,7 +57,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
       location: location.trim(),
       resourceHighlight: resourceHighlight.trim() || 'Nguồn lực sẵn có',
       cooperationType: cooperationType.trim() || 'Hợp tác phát triển',
-      imageUrl: categoryImages[category],
+      imageUrl: pickOpportunityImage(category, usedImageUrls),
       whatIHave: whatIHave.trim() || 'Có sẵn ý tưởng và nguồn lực ban đầu',
       whatINeed: whatINeed.trim() || 'Tìm cộng sự có chuyên môn cùng làm',
       detailedDescription: `${whatIHave.trim()}. Hướng mở rộng hợp tác: ${whatINeed.trim()}. Địa điểm: ${location}.`,
@@ -84,6 +79,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
         location: location.trim(),
         scale: cooperationType.trim(),
         reward: resourceHighlight.trim(),
+        imageUrl: newItem.imageUrl,
         status: 'active',
       }).catch((err) => console.warn('Lưu Firestore phụ:', err));
     }

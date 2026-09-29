@@ -34,6 +34,64 @@ export interface TestimonialItem {
   quote: string;
 }
 
+const unsplash = (photoId: string) =>
+  `https://images.unsplash.com/${photoId}?auto=format&fit=crop&w=800&q=80`;
+
+/** Ảnh minh họa theo nhóm. Mỗi lần đăng chọn ngẫu nhiên trong pool, ưu tiên ảnh chưa dùng. */
+export const OPPORTUNITY_IMAGE_POOLS: Record<OpportunityItem['category'], string[]> = {
+  project: [
+    unsplash('photo-1517256064527-09c73fc73e38'),
+    unsplash('photo-1495474472287-4d71bcdd2085'),
+    unsplash('photo-1501339847302-ac426a4a7cbb'),
+    unsplash('photo-1554118811-1e0d58224f24'),
+    unsplash('photo-1445116572660-236099ec97a0'),
+    unsplash('photo-1556742049-0cfed4f6a45d'),
+    unsplash('photo-1460925895917-afdab827c52f'),
+    unsplash('photo-1556761175-5973dc0f32e7'),
+  ],
+  resource: [
+    unsplash('photo-1581783342308-f792dbdd27c5'),
+    unsplash('photo-1504148455328-c376907d081c'),
+    unsplash('photo-1581091226825-a6a2a5aee158'),
+    unsplash('photo-1504328345606-18bbc8c9d7d1'),
+    unsplash('photo-1565043666747-69f6646db940'),
+    unsplash('photo-1565793298595-6a879b1d9492'),
+    unsplash('photo-1416879595882-3373a0480b5b'),
+    unsplash('photo-1581094794329-c8112a89af12'),
+  ],
+  space: [
+    unsplash('photo-1497366216548-37526070297c'),
+    unsplash('photo-1497215728101-856f4ea42174'),
+    unsplash('photo-1497366811353-6870744d04b2'),
+    unsplash('photo-1524758631624-e2822e304c36'),
+    unsplash('photo-1497366754035-f200968a6e72'),
+    unsplash('photo-1527192491265-7e15c55b1ed2'),
+    unsplash('photo-1604328698692-f76ea9498e76'),
+    unsplash('photo-1517502884422-41eaead166d4'),
+  ],
+  partner: [
+    unsplash('photo-1498050108023-c5249f4df085'),
+    unsplash('photo-1519389950473-47ba0277781c'),
+    unsplash('photo-1522071820081-009f0129c71c'),
+    unsplash('photo-1551434678-e076c223a692'),
+    unsplash('photo-1531482615713-2afd69097998'),
+    unsplash('photo-1600880292203-757bb62b4baf'),
+    unsplash('photo-1517245386807-bb43f82c33c4'),
+    unsplash('photo-1552664730-d307ca884978'),
+  ],
+};
+
+export function pickOpportunityImage(
+  category: OpportunityItem['category'],
+  usedImageUrls: Iterable<string> = [],
+): string {
+  const pool = OPPORTUNITY_IMAGE_POOLS[category];
+  const used = new Set(usedImageUrls);
+  const unused = pool.filter((url) => !used.has(url));
+  const candidates = unused.length > 0 ? unused : pool;
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
 export const INITIAL_OPPORTUNITIES: OpportunityItem[] = [
   {
     id: 'opp-1',
