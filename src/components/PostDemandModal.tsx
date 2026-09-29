@@ -8,7 +8,7 @@ import {
   Users,
   ArrowRight
 } from 'lucide-react';
-import { OpportunityItem } from '../data/cungLamData';
+import { OpportunityItem } from '../data/opportunitiesData';
 
 interface PostDemandModalProps {
   isOpen: boolean;

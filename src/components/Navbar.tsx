@@ -1,12 +1,14 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
-interface CungLamHeaderProps {
+interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
   onNavigateSection: (sectionId: string) => void;
 }
 
-export const CungLamHeader: React.FC<CungLamHeaderProps> = ({
+export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onNavigateSection,
 }) => {

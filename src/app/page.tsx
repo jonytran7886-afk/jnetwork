@@ -1,24 +1,21 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+'use client';
 
 import React, { useState } from 'react';
-import { CungLamHeader } from './components/CungLamHeader';
-import { CungLamHero } from './components/CungLamHero';
-import { CungLamPillars } from './components/CungLamPillars';
-import { CungLamHowItWorks } from './components/CungLamHowItWorks';
-import { CungLamOpportunities } from './components/CungLamOpportunities';
-import { CungLamCommunityValues } from './components/CungLamCommunityValues';
-import { CungLamCta } from './components/CungLamCta';
-import { CungLamFooter } from './components/CungLamFooter';
-import { OpportunityDetailModal } from './components/OpportunityDetailModal';
-import { PostDemandModal } from './components/PostDemandModal';
-import { AuthModal } from './components/AuthModal';
-import { CommunityPrinciplesModal } from './components/CommunityPrinciplesModal';
-import { INITIAL_OPPORTUNITIES, OpportunityItem } from './data/cungLamData';
+import { Navbar } from '../components/Navbar';
+import { HeroSection } from '../components/HeroSection';
+import { PillarsSection } from '../components/PillarsSection';
+import { HowItWorksSection } from '../components/HowItWorksSection';
+import { OpportunitiesSection } from '../components/OpportunitiesSection';
+import { CommunityValuesSection } from '../components/CommunityValuesSection';
+import { CtaSection } from '../components/CtaSection';
+import { Footer } from '../components/Footer';
+import { OpportunityDetailModal } from '../components/OpportunityDetailModal';
+import { PostDemandModal } from '../components/PostDemandModal';
+import { AuthModal } from '../components/AuthModal';
+import { CommunityPrinciplesModal } from '../components/CommunityPrinciplesModal';
+import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
 
-export default function App() {
+export default function HomePage() {
   const [opportunities, setOpportunities] = useState<OpportunityItem[]>(INITIAL_OPPORTUNITIES);
   const [activeHeroTab, setActiveHeroTab] = useState<'project' | 'resource' | 'space' | 'partner'>('project');
   const [selectedOpportunityCategory, setSelectedOpportunityCategory] = useState<string>('all');
@@ -126,7 +123,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-[#FF2D55] selection:text-white flex flex-col">
       
       {/* Header */}
-      <CungLamHeader
+      <Navbar
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
@@ -137,7 +134,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1">
         {/* 1. Hero Section */}
-        <CungLamHero
+        <HeroSection
           activeHeroTab={activeHeroTab}
           setActiveHeroTab={(tab) => {
             setActiveHeroTab(tab);
@@ -152,13 +149,13 @@ export default function App() {
         />
 
         {/* 2. Giá trị cốt lõi (4 Pillars Bar) */}
-        <CungLamPillars onSelectCategory={handleSelectPillar} />
+        <PillarsSection onSelectCategory={handleSelectPillar} />
 
         {/* 3. Cách hoạt động (4 Steps) */}
-        <CungLamHowItWorks />
+        <HowItWorksSection />
 
         {/* 4. Những cơ hội đang được chia sẻ (Opportunities) */}
-        <CungLamOpportunities
+        <OpportunitiesSection
           opportunities={opportunities}
           selectedCategory={selectedOpportunityCategory}
           onSelectCategory={(cat) => setSelectedOpportunityCategory(cat)}
@@ -170,18 +167,18 @@ export default function App() {
           }}
         />
 
-        {/* 5. Giá trị cộng đồng (Community Values - Replaced Testimonials) */}
-        <CungLamCommunityValues />
+        {/* 5. Giá trị cộng đồng (Community Values) */}
+        <CommunityValuesSection />
 
         {/* 6. CTA Banner */}
-        <CungLamCta
+        <CtaSection
           onJoinCommunity={() => setAuthModalState({ isOpen: true, mode: 'register' })}
           onExploreOpportunities={() => scrollToSection('opportunities')}
         />
       </main>
 
       {/* Footer */}
-      <CungLamFooter
+      <Footer
         onNavigateSection={(id) => scrollToSection(id)}
         onSelectCategory={(cat) => handleSelectPillar(cat)}
         onOpenPrinciples={() => setPrinciplesModalState({ isOpen: true, defaultTab: 'principles' })}

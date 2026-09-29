@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import {
   FileText,
@@ -7,7 +9,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-export const CungLamHowItWorks: React.FC = () => {
+export const HowItWorksSection: React.FC = () => {
   const steps = [
     {
       stepLabel: '01',

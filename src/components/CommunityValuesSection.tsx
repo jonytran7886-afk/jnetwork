@@ -1,7 +1,9 @@
+'use client';
+
 import React from 'react';
 import { Compass, Puzzle, Sparkles } from 'lucide-react';
 
-export const CungLamCommunityValues: React.FC = () => {
+export const CommunityValuesSection: React.FC = () => {
   const values = [
     {
       id: 'val-1',

@@ -1,14 +1,14 @@
+'use client';
+
 import React from 'react';
 import {
   MapPin,
   Bookmark,
-  ArrowRight,
-  Layers,
-  Sparkles
+  ArrowRight
 } from 'lucide-react';
-import { OpportunityItem } from '../data/cungLamData';
+import { OpportunityItem } from '../data/opportunitiesData';
 
-interface CungLamOpportunitiesProps {
+interface OpportunitiesSectionProps {
   opportunities: OpportunityItem[];
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
@@ -17,7 +17,7 @@ interface CungLamOpportunitiesProps {
   onViewAll: () => void;
 }
 
-export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
+export const OpportunitiesSection: React.FC<OpportunitiesSectionProps> = ({
   opportunities,
   selectedCategory,
   onSelectCategory,

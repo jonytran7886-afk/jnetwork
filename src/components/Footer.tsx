@@ -1,14 +1,16 @@
+'use client';
+
 import React from 'react';
 import { Facebook, Youtube } from 'lucide-react';
 
-interface CungLamFooterProps {
+interface FooterProps {
   onNavigateSection: (sectionId: string) => void;
   onSelectCategory: (category: 'project' | 'resource' | 'space' | 'partner') => void;
   onOpenPrinciples: () => void;
   onOpenSupport: (topic?: string) => void;
 }
 
-export const CungLamFooter: React.FC<CungLamFooterProps> = ({
+export const Footer: React.FC<FooterProps> = ({
   onNavigateSection,
   onSelectCategory,
   onOpenPrinciples,

@@ -1,11 +1,13 @@
+'use client';
+
 import React from 'react';
 import { Lightbulb, Coins, Home, Users } from 'lucide-react';
 
-interface CungLamPillarsProps {
+interface PillarsSectionProps {
   onSelectCategory: (category: 'project' | 'resource' | 'space' | 'partner') => void;
 }
 
-export const CungLamPillars: React.FC<CungLamPillarsProps> = ({ onSelectCategory }) => {
+export const PillarsSection: React.FC<PillarsSectionProps> = ({ onSelectCategory }) => {
   return (
     <section className="py-6 sm:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">

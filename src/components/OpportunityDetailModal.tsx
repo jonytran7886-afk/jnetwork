@@ -9,7 +9,7 @@ import {
   Layers,
   HeartHandshake
 } from 'lucide-react';
-import { OpportunityItem } from '../data/cungLamData';
+import { OpportunityItem } from '../data/opportunitiesData';
 
 interface OpportunityDetailModalProps {
   opportunity: OpportunityItem | null;

@@ -1,12 +1,14 @@
+'use client';
+
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
-interface CungLamCtaProps {
+interface CtaSectionProps {
   onJoinCommunity: () => void;
   onExploreOpportunities: () => void;
 }
 
-export const CungLamCta: React.FC<CungLamCtaProps> = ({
+export const CtaSection: React.FC<CtaSectionProps> = ({
   onJoinCommunity,
   onExploreOpportunities,
 }) => {

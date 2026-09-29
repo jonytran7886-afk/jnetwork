@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import {
   Search,
@@ -6,14 +8,13 @@ import {
   Home,
   Users,
   ArrowRight,
-  Sparkles,
   Lightbulb,
   ShieldCheck,
   Globe2,
   HeartHandshake
 } from 'lucide-react';
 
-interface CungLamHeroProps {
+interface HeroSectionProps {
   activeHeroTab: 'project' | 'resource' | 'space' | 'partner';
   setActiveHeroTab: (tab: 'project' | 'resource' | 'space' | 'partner') => void;
   searchQuery: string;
@@ -24,7 +25,7 @@ interface CungLamHeroProps {
   onOpenPostDemand: () => void;
 }
 
-export const CungLamHero: React.FC<CungLamHeroProps> = ({
+export const HeroSection: React.FC<HeroSectionProps> = ({
   activeHeroTab,
   setActiveHeroTab,
   searchQuery,
@@ -47,25 +48,23 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
-          {/* ========================================================================= */}
-          {/* LEFT COLUMN: Hero Copy & Search Engine */}
-          {/* ========================================================================= */}
+          {/* LEFT COLUMN: Copy & Search Engine */}
           <div className="lg:col-span-7 space-y-6 sm:space-y-8">
             
-            {/* Standardized Eyebrow */}
+            {/* Eyebrow */}
             <div className="inline-block">
               <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#FF2D55]">
                 KẾT NỐI NGUỒN LỰC · CHIA SẺ CƠ HỘI · CÙNG PHÁT TRIỂN
               </span>
             </div>
 
-            {/* Standardized Main Headline */}
+            {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-slate-900 tracking-tight leading-[1.15]">
               Kết nối nguồn lực.<br />
               <span className="text-[#FF2D55]">Kiến tạo cơ hội.</span>
             </h1>
 
-            {/* Standardized Subtitle */}
+            {/* Subtitle */}
             <p className="text-base sm:text-lg text-slate-600 max-w-xl leading-relaxed">
               Một không gian mở, nơi mỗi ý tưởng, kỹ năng và nguồn lực đều có cơ hội kết nối để tạo nên những giá trị mới. Chia sẻ điều bạn có, khám phá những khả năng hợp tác và cùng phát triển.
             </p>
@@ -73,7 +72,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
             {/* Interactive Search Card */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-lg border border-slate-100 space-y-4">
               
-              {/* 4 Category Filter Tabs */}
+              {/* Category Filter Tabs */}
               <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
                 <button
                   type="button"
@@ -128,7 +127,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
                 </button>
               </div>
 
-              {/* Search Form with standardized placeholder & CTAs */}
+              {/* Search Form */}
               <form onSubmit={onSearchSubmit} className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -185,7 +184,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
               </div>
             </div>
 
-            {/* Standardized Core Positioning Values (Replaced unverified statistics) */}
+            {/* Core Positioning Values */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
               
               <div className="flex items-center gap-3">
@@ -233,9 +232,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
 
           </div>
 
-          {/* ========================================================================= */}
-          {/* RIGHT COLUMN: Standardized Visual Showcase */}
-          {/* ========================================================================= */}
+          {/* RIGHT COLUMN: Visual Showcase */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md lg:max-w-none">
               
@@ -251,7 +248,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
 
               <div className="space-y-4">
                 
-                {/* 1. Barista Image with standardized badge: "Tôi có nguồn lực" / "Tôi có ý tưởng" */}
+                {/* 1. Primary Feature Badge */}
                 <div className="relative group">
                   <div className="h-44 sm:h-52 w-full rounded-3xl overflow-hidden shadow-md">
                     <img
@@ -261,7 +258,6 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
                     />
                   </div>
 
-                  {/* Standardized Floating Action Badge */}
                   <button
                     onClick={() => onSelectCard('opp-1')}
                     className="absolute -bottom-4 right-2 sm:right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-lg border border-slate-100 flex items-center gap-3 hover:border-rose-200 transition-all cursor-pointer text-left max-w-xs"
@@ -283,10 +279,10 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
                   </button>
                 </div>
 
-                {/* Bottom row with 2 items */}
+                {/* Bottom row */}
                 <div className="grid grid-cols-2 gap-4 pt-3">
                   
-                  {/* 2. Professional Woman: "Tôi có kỹ năng" */}
+                  {/* 2. Skills Showcase */}
                   <div className="relative group">
                     <div className="h-40 sm:h-44 w-full rounded-3xl overflow-hidden shadow-md">
                       <img
@@ -312,12 +308,12 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
                         </span>
                       </div>
                       <div className="w-6 h-6 rounded-full bg-[#FF2D55] text-white flex items-center justify-center shrink-0">
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </button>
                   </div>
 
-                  {/* 3. Space: "Tôi có không gian" */}
+                  {/* 3. Space Showcase */}
                   <div className="relative group">
                     <div className="h-40 sm:h-44 w-full rounded-3xl overflow-hidden shadow-md">
                       <img
@@ -343,7 +339,7 @@ export const CungLamHero: React.FC<CungLamHeroProps> = ({
                         </span>
                       </div>
                       <div className="w-6 h-6 rounded-full bg-[#FF2D55] text-white flex items-center justify-center shrink-0">
-                        <ArrowRight className="w-3 h-3" />
+                        <ArrowRight className="w-3.5 h-3.5" />
                       </div>
                     </button>
                   </div>
