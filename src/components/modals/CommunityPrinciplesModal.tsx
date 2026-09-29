@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { X, CheckCircle2, ShieldCheck, HeartHandshake, HelpCircle, Lock } from 'lucide-react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { X, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react';
+
+type PrinciplesTab = 'principles' | 'support' | 'terms' | 'privacy';
 
 interface CommunityPrinciplesModalProps {
   isOpen: boolean;
   onClose: () => void;
-  defaultTab?: 'principles' | 'support' | 'terms' | 'privacy';
+  defaultTab?: PrinciplesTab;
 }
 
 export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> = ({
@@ -12,14 +16,23 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
   onClose,
   defaultTab = 'principles',
 }) => {
-  const [tab, setTab] = useState<'principles' | 'support' | 'terms' | 'privacy'>(defaultTab);
+  const [tab, setTab] = useState<PrinciplesTab>(defaultTab);
+
+  // `defaultTab` previously only seeded state on first mount, so opening the
+  // modal again from a different footer link (e.g. "Điều khoản" after
+  // "Nguyên tắc") kept showing whichever tab was active before. Re-sync
+  // whenever the modal is opened.
+  useEffect(() => {
+    if (isOpen) {
+      setTab(defaultTab);
+    }
+  }, [isOpen, defaultTab]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-6 my-8 animate-in fade-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
@@ -33,10 +46,7 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
               {tab === 'privacy' && 'Chính sách quyền riêng tư'}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -90,7 +100,8 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
                 1. Bình đẳng &amp; Tôn trọng lẫn nhau
               </span>
               <p>
-                Mọi thành viên tham gia đều có quyền chia sẻ nguồn lực, khởi tạo cơ hội hoặc đề xuất hợp tác bình đẳng, không phân biệt quy mô cá nhân hay tổ chức.
+                Mọi thành viên tham gia đều có quyền chia sẻ nguồn lực, khởi tạo cơ hội hoặc đề xuất hợp tác bình
+                đẳng, không phân biệt quy mô cá nhân hay tổ chức.
               </p>
             </div>
 
@@ -100,7 +111,8 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
                 2. Minh bạch &amp; Thực chất
               </span>
               <p>
-                Mô tả trung thực về nguồn lực sẵn có và mục tiêu hợp tác. Cùng Làm nói không với các thông tin tuyển dụng trá hình, môi giới nhân sự hay hứa hẹn lợi ích tài chính ảo.
+                Mô tả trung thực về nguồn lực sẵn có và mục tiêu hợp tác. Cùng Làm nói không với các thông tin tuyển
+                dụng trá hình, môi giới nhân sự hay hứa hẹn lợi ích tài chính ảo.
               </p>
             </div>
 
@@ -110,7 +122,8 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
                 3. Đồng hành vì giá trị chung
               </span>
               <p>
-                Ưu tiên tinh thần hỗ trợ, học hỏi và cộng hưởng thế mạnh để cùng hiện thực hóa các ý tưởng có ích cho xã hội.
+                Ưu tiên tinh thần hỗ trợ, học hỏi và cộng hưởng thế mạnh để cùng hiện thực hóa các ý tưởng có ích
+                cho xã hội.
               </p>
             </div>
           </div>
@@ -119,29 +132,26 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
         {tab === 'support' && (
           <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
-              <span className="font-bold text-slate-900 block">
-                1. Cách kết nối an toàn với thành viên khác
-              </span>
+              <span className="font-bold text-slate-900 block">1. Cách kết nối an toàn với thành viên khác</span>
               <p>
-                Nên trao đổi cởi mở qua tin nhắn trên nền tảng, tìm hiểu rõ định hướng của đối tác trước khi tiến hành gặp gỡ hoặc thống nhất thỏa thuận hợp tác.
+                Nên trao đổi cởi mở qua tin nhắn trên nền tảng, tìm hiểu rõ định hướng của đối tác trước khi tiến
+                hành gặp gỡ hoặc thống nhất thỏa thuận hợp tác.
               </p>
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
-              <span className="font-bold text-slate-900 block">
-                2. Báo cáo nội dung không phù hợp
-              </span>
+              <span className="font-bold text-slate-900 block">2. Báo cáo nội dung không phù hợp</span>
               <p>
-                Nếu phát hiện nội dung có dấu hiệu tuyển dụng lao động trái quy định, lôi kéo đầu tư mạo hiểm hoặc vi phạm nguyên tắc cộng đồng, vui lòng bấm nút Báo cáo để đội ngũ kiểm duyệt xử lý trong 2 giờ.
+                Nếu phát hiện nội dung có dấu hiệu tuyển dụng lao động trái quy định, lôi kéo đầu tư mạo hiểm hoặc
+                vi phạm nguyên tắc cộng đồng, vui lòng bấm nút Báo cáo để đội ngũ kiểm duyệt xử lý trong 2 giờ.
               </p>
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/60 space-y-1">
-              <span className="font-bold text-slate-900 block">
-                3. Kênh liên hệ hỗ trợ chính thức
-              </span>
+              <span className="font-bold text-slate-900 block">3. Kênh liên hệ hỗ trợ chính thức</span>
               <p>
-                Email hỗ trợ: <strong>hotro@cunglam.vn</strong> · Đường dây tiếp nhận phản ánh: <strong>1900.6868</strong> (08:30 - 18:00 hàng ngày).
+                Email hỗ trợ: <strong>hotro@cunglam.vn</strong> · Đường dây tiếp nhận phản ánh: <strong>1900.6868</strong>{' '}
+                (08:30 - 18:00 hàng ngày).
               </p>
             </div>
           </div>
@@ -150,13 +160,16 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
         {tab === 'terms' && (
           <div className="space-y-3 text-xs text-slate-600 leading-relaxed max-h-[40vh] overflow-y-auto pr-1">
             <p>
-              Cùng Làm cung cấp không gian mở cho việc kết nối và chia sẻ thông tin nguồn lực hợp tác tự nguyện giữa các thành viên.
+              Cùng Làm cung cấp không gian mở cho việc kết nối và chia sẻ thông tin nguồn lực hợp tác tự nguyện giữa
+              các thành viên.
             </p>
             <p>
-              Thành viên tự chịu trách nhiệm về tính xác thực của nguồn lực mình chia sẻ và các thỏa thuận hợp tác dân sự được thiết lập giữa các bên.
+              Thành viên tự chịu trách nhiệm về tính xác thực của nguồn lực mình chia sẻ và các thỏa thuận hợp tác
+              dân sự được thiết lập giữa các bên.
             </p>
             <p>
-              Nghiêm cấm các hành vi sử dụng nền tảng cho mục đích lừa đảo, phát tán nội dung sai sự thật hoặc môi giới trung gian thu phí trái quy định.
+              Nghiêm cấm các hành vi sử dụng nền tảng cho mục đích lừa đảo, phát tán nội dung sai sự thật hoặc môi
+              giới trung gian thu phí trái quy định.
             </p>
           </div>
         )}
@@ -164,11 +177,10 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
         {tab === 'privacy' && (
           <div className="space-y-3 text-xs text-slate-600 leading-relaxed max-h-[40vh] overflow-y-auto pr-1">
             <p>
-              Cùng Làm cam kết bảo vệ thông tin cá nhân và dữ liệu liên lạc của thành viên. Thông tin số điện thoại chỉ được hiển thị khi bạn chủ động gửi lời mở hợp tác đến đối tác.
+              Cùng Làm cam kết bảo vệ thông tin cá nhân và dữ liệu liên lạc của thành viên. Thông tin số điện thoại
+              chỉ được hiển thị khi bạn chủ động gửi lời mở hợp tác đến đối tác.
             </p>
-            <p>
-              Chúng tôi không chia sẻ hoặc bán dữ liệu thành viên cho bên thứ ba vì bất kỳ mục đích thương mại nào.
-            </p>
+            <p>Chúng tôi không chia sẻ hoặc bán dữ liệu thành viên cho bên thứ ba vì bất kỳ mục đích thương mại nào.</p>
           </div>
         )}
 
@@ -180,7 +192,6 @@ export const CommunityPrinciplesModal: React.FC<CommunityPrinciplesModalProps> =
             Đã hiểu &amp; Đóng
           </button>
         </div>
-
       </div>
     </div>
   );

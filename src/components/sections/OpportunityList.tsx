@@ -1,14 +1,10 @@
 import React from 'react';
-import {
-  MapPin,
-  Bookmark,
-  ArrowRight,
-  Layers,
-  Sparkles
-} from 'lucide-react';
-import { OpportunityItem } from '../data/cungLamData';
+import Image from 'next/image';
+import { MapPin, Bookmark, ArrowRight } from 'lucide-react';
+import type { OpportunityItem } from '@/data/opportunities';
+import { OPPORTUNITY_CATEGORIES } from '@/data/categories';
 
-interface CungLamOpportunitiesProps {
+interface OpportunityListProps {
   opportunities: OpportunityItem[];
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
@@ -17,7 +13,9 @@ interface CungLamOpportunitiesProps {
   onViewAll: () => void;
 }
 
-export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
+const FILTERS = [{ key: 'all', label: 'Tất cả' }, ...OPPORTUNITY_CATEGORIES.map((c) => ({ key: c.key, label: c.label }))];
+
+export const OpportunityList: React.FC<OpportunityListProps> = ({
   opportunities,
   selectedCategory,
   onSelectCategory,
@@ -25,14 +23,6 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
   onSelectOpportunity,
   onViewAll,
 }) => {
-  const categories = [
-    { key: 'all', label: 'Tất cả' },
-    { key: 'project', label: 'Dự án & ý tưởng' },
-    { key: 'resource', label: 'Nguồn lực hợp tác' },
-    { key: 'space', label: 'Không gian chia sẻ' },
-    { key: 'partner', label: 'Hợp tác chuyên môn' },
-  ];
-
   const filtered = opportunities.filter((item) => {
     if (selectedCategory === 'all') return true;
     return item.category === selectedCategory;
@@ -41,7 +31,6 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
   return (
     <section id="opportunities" className="py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div className="space-y-1.5 max-w-2xl">
@@ -67,17 +56,17 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
 
         {/* Filter Badges Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-8 scrollbar-none">
-          {categories.map((cat) => (
+          {FILTERS.map((filter) => (
             <button
-              key={cat.key}
-              onClick={() => onSelectCategory(cat.key)}
+              key={filter.key}
+              onClick={() => onSelectCategory(filter.key)}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                selectedCategory === cat.key
+                selectedCategory === filter.key
                   ? 'bg-slate-900 text-white shadow-2xs'
                   : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
               }`}
             >
-              {cat.label}
+              {filter.label}
             </button>
           ))}
         </div>
@@ -91,14 +80,14 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
               className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all cursor-pointer flex flex-col justify-between group"
             >
               <div className="space-y-4">
-                
                 {/* Photo Banner with Category Tag & Bookmark */}
                 <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-                  <img
+                  <Image
                     src={item.imageUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
+                    fill
+                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
 
                   {/* Dark Tag on Photo */}
@@ -113,9 +102,7 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
                     className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-white/90 backdrop-blur-xs text-slate-700 hover:text-[#FF2D55] hover:bg-white flex items-center justify-center shadow-xs transition-colors cursor-pointer"
                     aria-label="Lưu cơ hội"
                   >
-                    <Bookmark
-                      className={`w-4 h-4 ${item.isBookmarked ? 'fill-[#FF2D55] text-[#FF2D55]' : ''}`}
-                    />
+                    <Bookmark className={`w-4 h-4 ${item.isBookmarked ? 'fill-[#FF2D55] text-[#FF2D55]' : ''}`} />
                   </button>
                 </div>
 
@@ -125,23 +112,18 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
                     {item.title}
                   </h3>
 
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
-                    {item.detailedDescription}
-                  </p>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{item.detailedDescription}</p>
 
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">{item.location}</span>
                   </div>
                 </div>
-
               </div>
 
               {/* Bottom Details Row & Card CTA */}
               <div className="px-5 pt-3 pb-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
-                <span className="text-slate-600 truncate max-w-[130px]">
-                  {item.resourceHighlight}
-                </span>
+                <span className="text-slate-600 truncate max-w-[130px]">{item.resourceHighlight}</span>
 
                 <button
                   type="button"
@@ -155,7 +137,6 @@ export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
             </article>
           ))}
         </div>
-
       </div>
     </section>
   );

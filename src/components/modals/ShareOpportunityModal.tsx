@@ -1,27 +1,22 @@
-import React, { useState } from 'react';
-import {
-  X,
-  CheckCircle2,
-  FileText,
-  Home,
-  Coins,
-  Users,
-  ArrowRight
-} from 'lucide-react';
-import { OpportunityItem } from '../data/cungLamData';
+'use client';
 
-interface PostDemandModalProps {
+import React, { useState } from 'react';
+import { X, CheckCircle2, ArrowRight } from 'lucide-react';
+import type { OpportunityItem } from '@/data/opportunities';
+import { CATEGORY_BY_KEY, OPPORTUNITY_CATEGORIES, type OpportunityCategory } from '@/data/categories';
+
+interface ShareOpportunityModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAddOpportunity: (newItem: OpportunityItem) => void;
 }
 
-export const PostDemandModal: React.FC<PostDemandModalProps> = ({
+export const ShareOpportunityModal: React.FC<ShareOpportunityModalProps> = ({
   isOpen,
   onClose,
   onAddOpportunity,
 }) => {
-  const [category, setCategory] = useState<'project' | 'resource' | 'space' | 'partner'>('project');
+  const [category, setCategory] = useState<OpportunityCategory>('project');
   const [title, setTitle] = useState('');
   const [whatIHave, setWhatIHave] = useState('');
   const [whatINeed, setWhatINeed] = useState('');
@@ -34,19 +29,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
 
   if (!isOpen) return null;
 
-  const categoryLabels = {
-    project: 'Dự án & ý tưởng',
-    resource: 'Nguồn lực hợp tác',
-    space: 'Không gian chia sẻ',
-    partner: 'Cộng đồng chuyên môn',
-  } as const;
-
-  const categoryImages = {
-    project: 'https://images.unsplash.com/photo-1517256064527-09c73fc73e38?auto=format&fit=crop&w=800&q=80',
-    resource: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=800&q=80',
-    space: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=800&q=80',
-    partner: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80',
-  };
+  const selectedCategory = CATEGORY_BY_KEY[category];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +38,12 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
     const newItem: OpportunityItem = {
       id: `opp-${Date.now()}`,
       category,
-      categoryLabel: categoryLabels[category],
+      categoryLabel: selectedCategory.label,
       title: title.trim(),
       location: location.trim(),
       resourceHighlight: resourceHighlight.trim() || 'Nguồn lực sẵn có',
       cooperationType: cooperationType.trim() || 'Hợp tác phát triển',
-      imageUrl: categoryImages[category],
+      imageUrl: selectedCategory.sampleImageUrl,
       whatIHave: whatIHave.trim() || 'Có sẵn ý tưởng và nguồn lực ban đầu',
       whatINeed: whatINeed.trim() || 'Tìm cộng sự có chuyên môn cùng làm',
       detailedDescription: `${whatIHave.trim()}. Hướng mở rộng hợp tác: ${whatINeed.trim()}. Địa điểm: ${location}.`,
@@ -86,24 +69,18 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-6 my-8 animate-in fade-in zoom-in-95 duration-200">
-        
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="space-y-1">
             <span className="text-xs font-bold uppercase tracking-wider text-[#FF2D55] block">
               BƯỚC 1: CHIA SẺ NGUỒN LỰC
             </span>
-            <h3 className="text-xl font-black text-slate-900">
-              Giới thiệu nguồn lực &amp; cơ hội của bạn
-            </h3>
+            <h3 className="text-xl font-black text-slate-900">Giới thiệu nguồn lực &amp; cơ hội của bạn</h3>
             <p className="text-xs text-slate-500">
               Cho cộng đồng biết bạn có gì và đang mong muốn mở rộng cơ hội hợp tác nào.
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -111,81 +88,45 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
         {isSuccess ? (
           <div className="py-10 text-center space-y-3">
             <CheckCircle2 className="w-14 h-14 text-emerald-600 mx-auto" />
-            <h4 className="text-lg font-bold text-slate-900">
-              Chia sẻ nguồn lực thành công!
-            </h4>
+            <h4 className="text-lg font-bold text-slate-900">Chia sẻ nguồn lực thành công!</h4>
             <p className="text-xs text-slate-600 max-w-sm mx-auto">
               Cơ hội của bạn đã xuất hiện trong mục <strong>Những cơ hội đang được chia sẻ</strong>.
             </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            
             {/* 1. Category Picker */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-2">
                 1. Lĩnh vực nguồn lực bạn muốn chia sẻ *
               </label>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setCategory('project')}
-                  className={`p-3 rounded-xl border text-left text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    category === 'project'
-                      ? 'border-[#FF2D55] bg-rose-50/60 text-[#FF2D55]'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <FileText className="w-4 h-4 text-[#FF2D55]" />
-                  <span>Dự án &amp; ý tưởng</span>
-                </button>
+                {OPPORTUNITY_CATEGORIES.map((option) => {
+                  const Icon = option.icon;
+                  const isActive = category === option.key;
 
-                <button
-                  type="button"
-                  onClick={() => setCategory('resource')}
-                  className={`p-3 rounded-xl border text-left text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    category === 'resource'
-                      ? 'border-[#FF2D55] bg-rose-50/60 text-[#FF2D55]'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Coins className="w-4 h-4 text-amber-500" />
-                  <span>Nguồn lực hợp tác</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCategory('space')}
-                  className={`p-3 rounded-xl border text-left text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    category === 'space'
-                      ? 'border-[#FF2D55] bg-rose-50/60 text-[#FF2D55]'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Home className="w-4 h-4 text-sky-500" />
-                  <span>Không gian chia sẻ</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCategory('partner')}
-                  className={`p-3 rounded-xl border text-left text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                    category === 'partner'
-                      ? 'border-[#FF2D55] bg-rose-50/60 text-[#FF2D55]'
-                      : 'border-slate-200 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <Users className="w-4 h-4 text-indigo-500" />
-                  <span>Cộng đồng chuyên môn</span>
-                </button>
+                  return (
+                    <button
+                      key={option.key}
+                      type="button"
+                      onClick={() => setCategory(option.key)}
+                      className={`p-3 rounded-xl border text-left text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                        isActive
+                          ? 'border-[#FF2D55] bg-rose-50/60 text-[#FF2D55]'
+                          : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${option.iconClassName}`} />
+                      <span>{option.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* 2. Title */}
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                2. Tiêu đề cơ hội hợp tác *
-              </label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">2. Tiêu đề cơ hội hợp tác *</label>
               <input
                 type="text"
                 required
@@ -199,9 +140,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
             {/* 3. What I Have & Need */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nguồn lực bạn sẵn có *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nguồn lực bạn sẵn có *</label>
                 <textarea
                   required
                   rows={2}
@@ -213,9 +152,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Khả năng mong muốn kết nối *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Khả năng mong muốn kết nối *</label>
                 <textarea
                   required
                   rows={2}
@@ -230,9 +167,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
             {/* 4. Location & Highlight */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Địa điểm hoạt động
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Địa điểm hoạt động</label>
                 <input
                   type="text"
                   value={location}
@@ -243,9 +178,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Điểm nhấn nguồn lực
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Điểm nhấn nguồn lực</label>
                 <input
                   type="text"
                   value={resourceHighlight}
@@ -256,12 +189,22 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
               </div>
             </div>
 
-            {/* 5. Contact Info */}
+            {/* 5. Cooperation Type */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Định hướng hợp tác</label>
+              <input
+                type="text"
+                value={cooperationType}
+                onChange={(e) => setCooperationType(e.target.value)}
+                placeholder="Ví dụ: Đồng hành triển khai, Mở rộng quy mô & kinh doanh..."
+                className="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-[#FF2D55]"
+              />
+            </div>
+
+            {/* 6. Contact Info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-100">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Họ tên bạn *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Họ tên bạn *</label>
                 <input
                   type="text"
                   required
@@ -273,9 +216,7 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Số điện thoại / Zalo để kết nối *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại / Zalo để kết nối *</label>
                 <input
                   type="text"
                   required
@@ -306,7 +247,6 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
             </div>
           </form>
         )}
-
       </div>
     </div>
   );

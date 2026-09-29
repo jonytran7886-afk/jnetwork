@@ -1,4 +1,4 @@
-# Build và chạy jnetwork bằng Docker
+# Build và chạy Cùng Làm bằng Docker
 
 Thực hiện từ thư mục gốc `jnetwork`, với Docker Engine và Docker Compose đã cài:
 
@@ -22,15 +22,14 @@ Các biến tùy chọn có thể đặt trong môi trường shell hoặc file 
 | --- | --- | --- |
 | `JNETWORK_IMAGE` | `jonytran86/jnetwork:latest` | Tên/tag image, có thể thay bằng image trên registry |
 | `JNETWORK_PORT` | `3112` | Cổng truy cập từ máy chủ |
-| `GEMINI_API_KEY` | Rỗng | Khóa cho API AI cũ; không bắt buộc cho giao diện |
 
-Compose truyền khóa lúc chạy container, không đưa `.env` vào image. Compose dùng mạng mặc định của project, không yêu cầu tạo sẵn mạng ngoài `app_net`.
+Compose dùng mạng mặc định của project, không yêu cầu tạo sẵn mạng ngoài.
 
-Dockerfile build frontend Vite thành `dist/`, chuyển `server.ts` thành `server.js` bằng esbuild và giữ các dependency production. Container chạy Express bằng Node với user `node` và tini; không cần `tsx` lúc chạy. Healthcheck gọi `/` vì source không có endpoint `/health` riêng; kiểm tra này chỉ xác nhận HTTP frontend, không kiểm tra Gemini.
+`docker/Dockerfile` build ứng dụng Next.js với `output: 'standalone'` (khai báo tại `next.config.ts`): giai đoạn `builder` chạy `npm run build`, giai đoạn `runner` chỉ sao chép `.next/standalone`, `.next/static` và `public/` — không cần `node_modules` đầy đủ hay mã nguồn TypeScript trong image cuối. Container chạy `node server.js` (entrypoint do Next.js tự sinh) bằng user `node` và `tini`. Healthcheck gọi `/` vì source chưa có endpoint `/health` riêng.
 
 ```powershell
 docker compose -f docker/docker-compose.production.yml logs -f
 docker compose -f docker/docker-compose.production.yml down
 ```
 
-Source chưa có npm lockfile và `bun.lock` đang rỗng nên build dùng `npm install`; phiên bản dependency có thể thay đổi giữa các lần build. Các chức năng demo vẫn chỉ lưu trong bộ nhớ React, Docker không bổ sung database hoặc lưu bài đăng.
+Source chưa có npm lockfile nên build dùng `npm install`; phiên bản dependency có thể thay đổi giữa các lần build. Các chức năng demo (bài đăng, bookmark) vẫn chỉ lưu trong bộ nhớ React phía client; Docker không bổ sung database hoặc lưu trữ phía server.

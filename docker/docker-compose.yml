@@ -9,7 +9,6 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     security_opt:
       - no-new-privileges:true
     tmpfs:

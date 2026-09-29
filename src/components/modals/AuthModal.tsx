@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { X, CheckCircle2, ArrowRight } from 'lucide-react';
 
 interface AuthModalProps {
@@ -8,17 +10,22 @@ interface AuthModalProps {
   onSuccess: (userName: string) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  initialMode,
-  onClose,
-  onSuccess,
-}) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, initialMode, onClose, onSuccess }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
   const [name, setName] = useState('');
   const [emailOrPhone, setEmailOrPhone] = useState('');
   const [password, setPassword] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // `initialMode` previously only seeded state on first mount, so reopening
+  // the modal with a different mode (e.g. clicking "Đăng nhập" after it had
+  // been opened in "register" mode) kept showing the stale tab. Re-sync
+  // whenever the modal is opened.
+  useEffect(() => {
+    if (isOpen) {
+      setMode(initialMode);
+    }
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
@@ -44,7 +51,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-6 my-8 animate-in fade-in zoom-in-95 duration-200">
-        
         {/* Top Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-2">
@@ -58,10 +64,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {mode === 'login' ? 'Đăng nhập vào Cùng Làm' : 'Tham gia cộng đồng Cùng Làm'}
             </span>
           </div>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -100,9 +103,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Họ và tên bạn *
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Họ và tên bạn *</label>
                 <input
                   type="text"
                   required
@@ -115,9 +116,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Số điện thoại hoặc Email *
-              </label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Số điện thoại hoặc Email *</label>
               <input
                 type="text"
                 required
@@ -129,9 +128,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Mật khẩu *
-              </label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Mật khẩu *</label>
               <input
                 type="password"
                 required
@@ -174,7 +171,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </form>
         )}
-
       </div>
     </div>
   );
