@@ -5,6 +5,7 @@ import { Menu, X, LogOut, User as UserIcon, FolderKanban, Inbox, MessageSquare }
 import { auth, signOutUser, db } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { Logo } from './Logo';
 
 interface NavbarProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
@@ -70,18 +71,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         <button
           onClick={() => handleNavClick('hero')}
           className="flex items-center gap-2.5 cursor-pointer focus:outline-none group text-left"
+          title="Trang chủ J-Network"
         >
-          <div className="w-8 h-8 flex items-center justify-center">
-            <svg width="32" height="32" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="11" cy="13" r="7" fill="#FF2D55" />
-              <circle cx="25" cy="13" r="7" fill="#FF4D6D" />
-              <circle cx="18" cy="24" r="7.5" fill="#E11D48" />
-              <circle cx="18" cy="17" r="3.5" fill="white" />
-            </svg>
-          </div>
-          <span className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 group-hover:text-[#FF2D55] transition-colors">
-            J-Network
-          </span>
+          <Logo size="md" />
         </button>
 
         {/* Center Navigation Links */}

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Facebook, Youtube } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface FooterProps {
   onNavigateSection: (sectionId: string) => void;
@@ -25,20 +26,10 @@ export const Footer: React.FC<FooterProps> = ({
           
           {/* Brand Col */}
           <div className="col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <svg width="28" height="28" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="11" cy="13" r="7" fill="#FF2D55" />
-                <circle cx="25" cy="13" r="7" fill="#FF4D6D" />
-                <circle cx="18" cy="24" r="7.5" fill="#E11D48" />
-                <circle cx="18" cy="17" r="3.5" fill="white" />
-              </svg>
-              <span className="text-xl font-black tracking-tight text-slate-900">
-                Cùng Làm
-              </span>
-            </div>
+            <Logo size="md" />
 
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm">
-              Cùng Làm — Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và phát triển những giá trị hợp tác.
+              J-Network — Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và phát triển những giá trị hợp tác thực tế.
             </p>
           </div>
 
