@@ -1,14 +1,15 @@
-'use client';
-
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 
-interface HeaderProps {
+interface CungLamHeaderProps {
   onOpenAuth: (mode: 'login' | 'register') => void;
   onNavigateSection: (sectionId: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onNavigateSection }) => {
+export const CungLamHeader: React.FC<CungLamHeaderProps> = ({
+  onOpenAuth,
+  onNavigateSection,
+}) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleNavClick = (sectionId: string) => {
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAuth, onNavigateSection })
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+        
         {/* Brand Logo */}
         <button
           onClick={() => handleNavClick('hero')}

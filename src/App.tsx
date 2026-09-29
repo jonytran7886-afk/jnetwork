@@ -1,30 +1,32 @@
-'use client';
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import React, { useState } from 'react';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { Hero } from '@/components/sections/Hero';
-import { Pillars } from '@/components/sections/Pillars';
-import { HowItWorks } from '@/components/sections/HowItWorks';
-import { OpportunityList } from '@/components/sections/OpportunityList';
-import { CommunityValues } from '@/components/sections/CommunityValues';
-import { CtaSection } from '@/components/sections/CtaSection';
-import { OpportunityDetailModal } from '@/components/modals/OpportunityDetailModal';
-import { ShareOpportunityModal } from '@/components/modals/ShareOpportunityModal';
-import { AuthModal } from '@/components/modals/AuthModal';
-import { CommunityPrinciplesModal } from '@/components/modals/CommunityPrinciplesModal';
-import { INITIAL_OPPORTUNITIES, type OpportunityItem } from '@/data/opportunities';
-import type { OpportunityCategory } from '@/data/categories';
+import { CungLamHeader } from './components/CungLamHeader';
+import { CungLamHero } from './components/CungLamHero';
+import { CungLamPillars } from './components/CungLamPillars';
+import { CungLamHowItWorks } from './components/CungLamHowItWorks';
+import { CungLamOpportunities } from './components/CungLamOpportunities';
+import { CungLamCommunityValues } from './components/CungLamCommunityValues';
+import { CungLamCta } from './components/CungLamCta';
+import { CungLamFooter } from './components/CungLamFooter';
+import { OpportunityDetailModal } from './components/OpportunityDetailModal';
+import { PostDemandModal } from './components/PostDemandModal';
+import { AuthModal } from './components/AuthModal';
+import { CommunityPrinciplesModal } from './components/CommunityPrinciplesModal';
+import { INITIAL_OPPORTUNITIES, OpportunityItem } from './data/cungLamData';
 
-export default function HomePage() {
+export default function App() {
   const [opportunities, setOpportunities] = useState<OpportunityItem[]>(INITIAL_OPPORTUNITIES);
-  const [activeHeroTab, setActiveHeroTab] = useState<OpportunityCategory>('project');
+  const [activeHeroTab, setActiveHeroTab] = useState<'project' | 'resource' | 'space' | 'partner'>('project');
   const [selectedOpportunityCategory, setSelectedOpportunityCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Modals state
-  const [activeDetailItemId, setActiveDetailItemId] = useState<string | null>(null);
-  const [isShareOpportunityOpen, setIsShareOpportunityOpen] = useState<boolean>(false);
+  const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
+  const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
     isOpen: false,
     mode: 'register',
@@ -39,11 +41,6 @@ export default function HomePage() {
 
   // User notification banner
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Look up the active opportunity by id on every render instead of storing
-  // a separate object reference, so a bookmark toggle from the list is
-  // reflected immediately if the detail modal is (re)opened for that item.
-  const activeDetailItem = opportunities.find((item) => item.id === activeDetailItemId) ?? null;
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -85,8 +82,8 @@ export default function HomePage() {
     scrollToSection('opportunities');
   };
 
-  // Hero pillar click handler
-  const handleSelectPillar = (category: OpportunityCategory) => {
+  // Hero Pillar click handler
+  const handleSelectPillar = (category: 'project' | 'resource' | 'space' | 'partner') => {
     setActiveHeroTab(category);
     setSelectedOpportunityCategory(category);
     scrollToSection('opportunities');
@@ -103,7 +100,7 @@ export default function HomePage() {
           return { ...item, isBookmarked: newState };
         }
         return item;
-      }),
+      })
     );
   };
 
@@ -119,13 +116,17 @@ export default function HomePage() {
 
   // Select sample card from Hero
   const handleSelectHeroCard = (sampleId: string) => {
-    setActiveDetailItemId(sampleId);
+    const found = opportunities.find((o) => o.id === sampleId);
+    if (found) {
+      setActiveDetailItem(found);
+    }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-[#FF2D55] selection:text-white flex flex-col">
+      
       {/* Header */}
-      <Header
+      <CungLamHeader
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
@@ -136,7 +137,7 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="flex-1">
         {/* 1. Hero Section */}
-        <Hero
+        <CungLamHero
           activeHeroTab={activeHeroTab}
           setActiveHeroTab={(tab) => {
             setActiveHeroTab(tab);
@@ -147,40 +148,40 @@ export default function HomePage() {
           onSearchSubmit={handleSearchSubmit}
           onTagClick={handleTagClick}
           onSelectCard={handleSelectHeroCard}
-          onOpenPostDemand={() => setIsShareOpportunityOpen(true)}
+          onOpenPostDemand={() => setIsPostDemandOpen(true)}
         />
 
-        {/* 2. Giá trị cốt lõi (Pillars) */}
-        <Pillars onSelectCategory={handleSelectPillar} />
+        {/* 2. Giá trị cốt lõi (4 Pillars Bar) */}
+        <CungLamPillars onSelectCategory={handleSelectPillar} />
 
         {/* 3. Cách hoạt động (4 Steps) */}
-        <HowItWorks />
+        <CungLamHowItWorks />
 
-        {/* 4. Những cơ hội đang được chia sẻ */}
-        <OpportunityList
+        {/* 4. Những cơ hội đang được chia sẻ (Opportunities) */}
+        <CungLamOpportunities
           opportunities={opportunities}
           selectedCategory={selectedOpportunityCategory}
           onSelectCategory={(cat) => setSelectedOpportunityCategory(cat)}
           onBookmarkToggle={handleBookmarkToggle}
-          onSelectOpportunity={(opp) => setActiveDetailItemId(opp.id)}
+          onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
           onViewAll={() => {
             setSelectedOpportunityCategory('all');
             scrollToSection('opportunities');
           }}
         />
 
-        {/* 5. Giá trị cộng đồng */}
-        <CommunityValues />
+        {/* 5. Giá trị cộng đồng (Community Values - Replaced Testimonials) */}
+        <CungLamCommunityValues />
 
         {/* 6. CTA Banner */}
-        <CtaSection
+        <CungLamCta
           onJoinCommunity={() => setAuthModalState({ isOpen: true, mode: 'register' })}
           onExploreOpportunities={() => scrollToSection('opportunities')}
         />
       </main>
 
       {/* Footer */}
-      <Footer
+      <CungLamFooter
         onNavigateSection={(id) => scrollToSection(id)}
         onSelectCategory={(cat) => handleSelectPillar(cat)}
         onOpenPrinciples={() => setPrinciplesModalState({ isOpen: true, defaultTab: 'principles' })}
@@ -197,14 +198,14 @@ export default function HomePage() {
       {/* 1. Opportunity Detail Modal */}
       <OpportunityDetailModal
         opportunity={activeDetailItem}
-        onClose={() => setActiveDetailItemId(null)}
+        onClose={() => setActiveDetailItem(null)}
         onBookmarkToggle={handleBookmarkToggle}
       />
 
-      {/* 2. Share Opportunity Modal */}
-      <ShareOpportunityModal
-        isOpen={isShareOpportunityOpen}
-        onClose={() => setIsShareOpportunityOpen(false)}
+      {/* 2. Post Demand Modal */}
+      <PostDemandModal
+        isOpen={isPostDemandOpen}
+        onClose={() => setIsPostDemandOpen(false)}
         onAddOpportunity={handleAddOpportunity}
       />
 
@@ -229,6 +230,7 @@ export default function HomePage() {
           {toastMessage}
         </div>
       )}
+
     </div>
   );
 }

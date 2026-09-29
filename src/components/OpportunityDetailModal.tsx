@@ -1,9 +1,15 @@
-'use client';
-
 import React, { useState } from 'react';
-import Image from 'next/image';
-import { X, MapPin, CheckCircle2, Send, Sparkles, Bookmark, Layers, HeartHandshake } from 'lucide-react';
-import type { OpportunityItem } from '@/data/opportunities';
+import {
+  X,
+  MapPin,
+  CheckCircle2,
+  Send,
+  Sparkles,
+  Bookmark,
+  Layers,
+  HeartHandshake
+} from 'lucide-react';
+import { OpportunityItem } from '../data/cungLamData';
 
 interface OpportunityDetailModalProps {
   opportunity: OpportunityItem | null;
@@ -35,14 +41,13 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-200">
+        
         {/* Banner with Image */}
         <div className="relative h-56 sm:h-64 w-full bg-slate-100">
-          <Image
+          <img
             src={opportunity.imageUrl}
             alt={opportunity.title}
-            fill
-            sizes="(min-width: 768px) 672px, 100vw"
-            className="object-cover"
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
@@ -63,7 +68,9 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
 
           {/* Bottom Title on Image */}
           <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-            <h2 className="text-lg sm:text-xl font-black leading-snug">{opportunity.title}</h2>
+            <h2 className="text-lg sm:text-xl font-black leading-snug">
+              {opportunity.title}
+            </h2>
             <div className="flex items-center gap-3 text-xs text-slate-200">
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5 text-rose-400" />
@@ -77,6 +84,7 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 sm:p-8 space-y-6 max-h-[60vh] overflow-y-auto">
+          
           {/* Key Resource Highlights */}
           <div className="grid grid-cols-2 gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
             <div>
@@ -102,7 +110,9 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 Nguồn lực sẵn có:
               </span>
-              <p className="text-emerald-900 leading-relaxed pl-5">{opportunity.whatIHave}</p>
+              <p className="text-emerald-900 leading-relaxed pl-5">
+                {opportunity.whatIHave}
+              </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-rose-50/70 border border-rose-100 space-y-1">
@@ -110,13 +120,17 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
                 <Sparkles className="w-4 h-4 text-[#FF2D55]" />
                 Cơ hội &amp; Năng lực mong muốn kết nối:
               </span>
-              <p className="text-rose-900 leading-relaxed pl-5">{opportunity.whatINeed}</p>
+              <p className="text-rose-900 leading-relaxed pl-5">
+                {opportunity.whatINeed}
+              </p>
             </div>
           </div>
 
           {/* Detailed description */}
           <div className="space-y-2">
-            <h4 className="font-bold text-slate-500 text-xs uppercase tracking-wider">Chi tiết cơ hội hợp tác</h4>
+            <h4 className="font-bold text-slate-500 text-xs uppercase tracking-wider">
+              Chi tiết cơ hội hợp tác
+            </h4>
             <p className="text-xs sm:text-sm text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
               {opportunity.detailedDescription}
             </p>
@@ -141,22 +155,27 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
 
           {/* Connect Form */}
           <div className="pt-4 border-t border-slate-100 space-y-4">
-            <h4 className="font-bold text-slate-900 text-sm">Mở lời hợp tác với người khởi tạo</h4>
+            <h4 className="font-bold text-slate-900 text-sm">
+              Mở lời hợp tác với người khởi tạo
+            </h4>
 
             {isSent ? (
               <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-200 text-center space-y-2">
                 <CheckCircle2 className="w-10 h-10 text-emerald-600 mx-auto" />
-                <h5 className="font-bold text-emerald-950 text-sm">Gửi lời mở hợp tác thành công!</h5>
+                <h5 className="font-bold text-emerald-950 text-sm">
+                  Gửi lời mở hợp tác thành công!
+                </h5>
                 <p className="text-xs text-emerald-800">
-                  Thông tin kết nối của bạn đã được chuyển tới {opportunity.creatorName} để hai bên cùng trao đổi
-                  chi tiết.
+                  Thông tin kết nối của bạn đã được chuyển tới {opportunity.creatorName} để hai bên cùng trao đổi chi tiết.
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Họ và tên bạn *</label>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Họ và tên bạn *
+                    </label>
                     <input
                       type="text"
                       required
@@ -214,7 +233,9 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
               </form>
             )}
           </div>
+
         </div>
+
       </div>
     </div>
   );

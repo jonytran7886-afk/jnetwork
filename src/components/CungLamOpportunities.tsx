@@ -1,10 +1,14 @@
 import React from 'react';
-import Image from 'next/image';
-import { MapPin, Bookmark, ArrowRight } from 'lucide-react';
-import type { OpportunityItem } from '@/data/opportunities';
-import { OPPORTUNITY_CATEGORIES } from '@/data/categories';
+import {
+  MapPin,
+  Bookmark,
+  ArrowRight,
+  Layers,
+  Sparkles
+} from 'lucide-react';
+import { OpportunityItem } from '../data/cungLamData';
 
-interface OpportunityListProps {
+interface CungLamOpportunitiesProps {
   opportunities: OpportunityItem[];
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
@@ -13,9 +17,7 @@ interface OpportunityListProps {
   onViewAll: () => void;
 }
 
-const FILTERS = [{ key: 'all', label: 'Tất cả' }, ...OPPORTUNITY_CATEGORIES.map((c) => ({ key: c.key, label: c.label }))];
-
-export const OpportunityList: React.FC<OpportunityListProps> = ({
+export const CungLamOpportunities: React.FC<CungLamOpportunitiesProps> = ({
   opportunities,
   selectedCategory,
   onSelectCategory,
@@ -23,6 +25,14 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
   onSelectOpportunity,
   onViewAll,
 }) => {
+  const categories = [
+    { key: 'all', label: 'Tất cả' },
+    { key: 'project', label: 'Dự án & ý tưởng' },
+    { key: 'resource', label: 'Nguồn lực hợp tác' },
+    { key: 'space', label: 'Không gian chia sẻ' },
+    { key: 'partner', label: 'Hợp tác chuyên môn' },
+  ];
+
   const filtered = opportunities.filter((item) => {
     if (selectedCategory === 'all') return true;
     return item.category === selectedCategory;
@@ -31,6 +41,7 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
   return (
     <section id="opportunities" className="py-12 sm:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        
         {/* Section Header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div className="space-y-1.5 max-w-2xl">
@@ -56,17 +67,17 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
 
         {/* Filter Badges Bar */}
         <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-8 scrollbar-none">
-          {FILTERS.map((filter) => (
+          {categories.map((cat) => (
             <button
-              key={filter.key}
-              onClick={() => onSelectCategory(filter.key)}
+              key={cat.key}
+              onClick={() => onSelectCategory(cat.key)}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                selectedCategory === filter.key
+                selectedCategory === cat.key
                   ? 'bg-slate-900 text-white shadow-2xs'
                   : 'bg-white hover:bg-slate-100 text-slate-600 border border-slate-200'
               }`}
             >
-              {filter.label}
+              {cat.label}
             </button>
           ))}
         </div>
@@ -80,14 +91,14 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
               className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all cursor-pointer flex flex-col justify-between group"
             >
               <div className="space-y-4">
+                
                 {/* Photo Banner with Category Tag & Bookmark */}
                 <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-                  <Image
+                  <img
                     src={item.imageUrl}
                     alt={item.title}
-                    fill
-                    sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
                   />
 
                   {/* Dark Tag on Photo */}
@@ -102,7 +113,9 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
                     className="absolute top-3 right-3 w-8 h-8 rounded-xl bg-white/90 backdrop-blur-xs text-slate-700 hover:text-[#FF2D55] hover:bg-white flex items-center justify-center shadow-xs transition-colors cursor-pointer"
                     aria-label="Lưu cơ hội"
                   >
-                    <Bookmark className={`w-4 h-4 ${item.isBookmarked ? 'fill-[#FF2D55] text-[#FF2D55]' : ''}`} />
+                    <Bookmark
+                      className={`w-4 h-4 ${item.isBookmarked ? 'fill-[#FF2D55] text-[#FF2D55]' : ''}`}
+                    />
                   </button>
                 </div>
 
@@ -112,18 +125,23 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
                     {item.title}
                   </h3>
 
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{item.detailedDescription}</p>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+                    {item.detailedDescription}
+                  </p>
 
                   <div className="flex items-center gap-1.5 text-xs text-slate-400 pt-1">
                     <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">{item.location}</span>
                   </div>
                 </div>
+
               </div>
 
               {/* Bottom Details Row & Card CTA */}
               <div className="px-5 pt-3 pb-5 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold">
-                <span className="text-slate-600 truncate max-w-[130px]">{item.resourceHighlight}</span>
+                <span className="text-slate-600 truncate max-w-[130px]">
+                  {item.resourceHighlight}
+                </span>
 
                 <button
                   type="button"
@@ -137,6 +155,7 @@ export const OpportunityList: React.FC<OpportunityListProps> = ({
             </article>
           ))}
         </div>
+
       </div>
     </section>
   );

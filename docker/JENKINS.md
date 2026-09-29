@@ -1,6 +1,6 @@
 # Jenkins cho jnetwork
 
-`Jenkinsfile` ở thư mục gốc dùng Declarative Pipeline: checkout SCM → build Next.js bằng Docker Compose → push Docker Hub → copy Compose → deploy VPS và chờ healthcheck.
+`Jenkinsfile` ở thư mục gốc dùng Declarative Pipeline: checkout SCM → build Vite/Express bằng Docker Compose → push Docker Hub → copy Compose → deploy VPS và chờ healthcheck.
 
 ## Cấu hình job trong ảnh
 
@@ -34,18 +34,19 @@ Jenkins agent cần Linux, Git, Docker CLI/daemon, Docker Compose v2, SSH/SCP v�
 
 ## Biến môi trường và image
 
-`.env.production` trong Git chứa cấu hình mặc định công khai (không có secret nào, vì ứng dụng hiện không gọi API bên ngoài nào cần khóa). Jenkins chép file này lên VPS mỗi lần deploy. Có thể tạo `.env` trực tiếp tại thư mục deploy trên VPS để ghi đè:
+`.env.production` trong Git chứa cấu hình mặc định công khai và khóa Gemini rỗng. Jenkins chép file này lên VPS mỗi lần deploy. Không ghi token hoặc khóa thật vào file được theo dõi bởi Git. Có thể tạo `.env` trực tiếp tại thư mục deploy trên VPS để ghi đè:
 
 ```dotenv
 JNETWORK_PORT=3112
+GEMINI_API_KEY=
 ```
 
-Nếu cổng 3112 đã được ứng dụng khác sử dụng, đặt `JNETWORK_PORT` thành cổng còn trống trước khi deploy. Pipeline đọc `.env.production` trước rồi `.env`; file `.env` trên VPS được giữ nguyên qua các lần deploy và được tạo rỗng nếu chưa có. Compose cần hỗ trợ nhiều tùy chọn `--env-file`.
+Gemini key có thể để trống. Nếu cổng 3112 đã được ứng dụng mẫu sử dụng, đặt JNETWORK_PORT thành cổng còn trống trước khi deploy. Pipeline đọc `.env.production` trước rồi `.env`; file `.env` trên VPS được giữ nguyên qua các lần deploy và được tạo rỗng nếu chưa có. Compose cần hỗ trợ nhiều tùy chọn `--env-file`.
 
-Image được push với tag `<BUILD_NUMBER>-<git-commit>` và `latest`. Deploy dùng tag của đúng build, ưu tiên hơn `JNETWORK_IMAGE` trong `.env`. Compose mặc định dùng `jonytran86/jnetwork:latest`. Khi pull thủ công trên VPS, cần đăng nhập Docker Hub bằng tài khoản có quyền đọc repository private; thông tin đăng nhập tạm của pipeline được dọn sau deploy.
+Image được push với tag `<BUILD_NUMBER>-<git-commit>` và `latest`. Deploy dùng tag của đúng build, ưu tiên hơn JNETWORK_IMAGE trong `.env`. Compose mặc định dùng `jonytran86/jnetwork:latest`. Khi pull thủ công trên VPS, cần đăng nhập Docker Hub bằng tài khoản có quyền đọc repository private; thông tin đăng nhập tạm của pipeline được dọn sau deploy.
 
-Mật khẩu Docker được truyền qua stdin, tắt shell tracing ở bước dùng mật khẩu; cấu hình đăng nhập tạm được dọn khi shell kết thúc. Pipeline không prune image của các ứng dụng khác, không tự rollback. Healthcheck chỉ xác nhận HTTP frontend đang phản hồi, không kiểm tra các chức năng còn mô phỏng phía client.
+Mật khẩu Docker được truyền qua stdin, tắt shell tracing ở bước dùng mật khẩu; cấu hình đăng nhập tạm được dọn khi shell kết thúc. Pipeline không prune image của các ứng dụng khác, không tự rollback. Healthcheck chỉ xác nhận HTTP frontend, không kiểm tra Gemini hoặc các chức năng còn mô phỏng.
 
 Tham khảo cú pháp: [Jenkins Pipeline Syntax](https://www.jenkins.io/doc/book/pipeline/syntax/).
 
-Chưa chạy pipeline, build Docker hoặc deploy sau đợt cập nhật cấu trúc Next.js này.
+Chưa chạy pipeline, build Docker hoặc deploy trong lần tạo cấu hình này.
