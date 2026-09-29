@@ -1,6 +1,8 @@
 {
-  "name": "UniversalNeeds Studio",
-  "description": "Xưởng thẩm định & khám phá ý tưởng sản phẩm thiết yếu cho mọi người (Universal Human Needs & Product Blueprint Studio).",
+  "name": "J-Network",
+  "description": "Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và thúc đẩy các hoạt động hợp tác thực tế.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

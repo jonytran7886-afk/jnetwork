@@ -1,7 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
   allowedDevOrigins: [
     'ais-dev-2xvt4fesakdnmeftrerr2z-814876491024.asia-east1.run.app',
     'ais-pre-2xvt4fesakdnmeftrerr2z-814876491024.asia-east1.run.app',

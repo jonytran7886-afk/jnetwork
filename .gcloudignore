@@ -1,0 +1,9 @@
+.git
+.gcloudignore
+node_modules/
+.next/
+dist/
+build/
+coverage/
+*.log
+*.tsbuildinfo
