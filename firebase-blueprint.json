@@ -100,6 +100,28 @@
           }
         }
       }
+    },
+    "IndustryInsight": {
+      "collection": "industry_insights",
+      "fields": {
+        "id": { "type": "string", "description": "ID bản tin thị trường" },
+        "title": { "type": "string", "description": "Tiêu đề bản tin" },
+        "category": { "type": "string", "description": "Lĩnh vực: supply_chain, policy_tax, funding_market, case_study, tech_ai" },
+        "categoryLabel": { "type": "string", "description": "Nhãn danh mục tiếng Việt" },
+        "summary": { "type": "string", "description": "Tóm tắt cốt lõi 1 câu" },
+        "keyTakeaways": { "type": "array", "description": "3 ý đúc kết then chốt" },
+        "actionableOpportunity": { "type": "string", "description": "Cơ hội hành động cho doanh nghiệp" },
+        "source": { "type": "string", "description": "Nguồn thông tin kiểm chứng" },
+        "imageUrl": { "type": "string", "description": "Ảnh minh họa" },
+        "publishedAt": { "type": "string", "description": "Thời gian đăng tải" },
+        "createdAt": { "type": "string", "description": "Thời gian tạo" }
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.auth != null",
+        "update": "request.auth != null",
+        "delete": "request.auth != null"
+      }
     }
   }
 }

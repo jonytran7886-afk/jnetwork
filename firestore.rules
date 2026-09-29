@@ -85,5 +85,17 @@ service cloud.firestore {
       }
     }
 
+    // =========================================================
+    // 5. Industry Insights Collection
+    // =========================================================
+    match /industry_insights/{insightId} {
+      // Anyone can read market intelligence and industry news
+      allow read: if true;
+      // Authenticated users or editors can create/update
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
   }
 }

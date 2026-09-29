@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   allowedDevOrigins: [
+    '*.run.app',
+    '*.asia-east1.run.app',
+    'ais-dev-aglkiyehndaug7rovupcdi-284046839939.asia-east1.run.app',
+    'ais-pre-aglkiyehndaug7rovupcdi-284046839939.asia-east1.run.app',
     'ais-dev-2xvt4fesakdnmeftrerr2z-814876491024.asia-east1.run.app',
     'ais-pre-2xvt4fesakdnmeftrerr2z-814876491024.asia-east1.run.app',
     'ais-shared-2xvt4fesakdnmeftrerr2z-814876491024.asia-east1.run.app',

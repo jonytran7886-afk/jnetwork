@@ -69,23 +69,17 @@ export const Navbar: React.FC<NavbarProps> = ({
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
         
-        {/* Brand Logo */}
+        {/* Brand Logo - Click returns to home */}
         <button
           onClick={() => handleNavClick('hero')}
           className="flex items-center gap-2.5 cursor-pointer focus:outline-none group text-left shrink-0"
-          title="Trang chủ J-Network"
+          title="Về trang chủ J-Network"
         >
           <Logo size="md" />
         </button>
 
-        {/* Center Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-3.5 xl:gap-6 2xl:gap-8 text-xs xl:text-sm font-semibold text-slate-700 shrink-0">
-          <button
-            onClick={() => handleNavClick('hero')}
-            className="text-[#FF2D55] hover:text-[#E01E45] transition-colors cursor-pointer shrink-0"
-          >
-            Trang chủ
-          </button>
+        {/* Center Navigation Links - Streamlined to prevent overflow */}
+        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 2xl:gap-8 text-xs xl:text-sm font-semibold text-slate-700 shrink-0">
           <button
             onClick={() => handleNavClick('opportunities')}
             className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
@@ -93,48 +87,47 @@ export const Navbar: React.FC<NavbarProps> = ({
             Khám phá
           </button>
           <button
-            onClick={() => handleNavClick('deal-room')}
-            className="text-amber-700 hover:text-[#FF2D55] font-bold transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+            onClick={() => handleNavClick('industry-insights')}
+            className="text-slate-700 hover:text-[#FF2D55] transition-colors cursor-pointer flex items-center gap-1 shrink-0"
           >
-            <span>Phòng Giao Thương</span>
-            <span className="text-[9px] xl:text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">MỚI</span>
+            <span>Bản tin thị trường</span>
           </button>
           <button
-            onClick={() => handleNavClick('how-it-works')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0 hidden xl:inline-block"
+            onClick={() => handleNavClick('deal-room')}
+            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
-            Cách hoạt động
+            <span>Phòng Giao Thương</span>
           </button>
           <button
             onClick={() => handleNavClick('community-values')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0 hidden 2xl:inline-block"
+            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
             Cộng đồng
           </button>
           <button
             onClick={() => handleNavClick('about-us')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0 hidden xl:inline-block"
+            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
             Về chúng tôi
           </button>
         </nav>
 
         {/* Right Action Buttons */}
-        <div className="hidden sm:flex items-center gap-2 xl:gap-3 shrink-0">
-          {/* Primary Action Button: Chia sẻ nguồn lực / Đăng cơ hội */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          {/* Primary Action Button: ICON ONLY as requested, frees maximum space */}
           <button
             type="button"
             onClick={() => (onOpenPostDemand ? onOpenPostDemand() : onOpenAuth('register'))}
-            className="px-3.5 xl:px-4 py-2 text-xs xl:text-sm font-bold text-white bg-gradient-to-r from-[#FF2D55] to-[#E01E45] hover:from-[#E01E45] hover:to-[#C01538] rounded-xl shadow-md shadow-[#FF2D55]/20 transition-all flex items-center gap-1.5 cursor-pointer active:scale-98 shrink-0"
-            title="Đăng tải nguồn lực hoặc nhu cầu hợp tác mới"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-white bg-gradient-to-r from-[#FF2D55] to-[#E01E45] hover:from-[#E01E45] hover:to-[#C01538] shadow-md shadow-[#FF2D55]/25 transition-all flex items-center justify-center cursor-pointer active:scale-95 shrink-0"
+            title="Chia sẻ nguồn lực / Đăng cơ hội mới"
+            aria-label="Chia sẻ nguồn lực"
           >
-            <Plus className="w-4 h-4" />
-            <span>Chia sẻ nguồn lực</span>
+            <Plus className="w-5 h-5 stroke-[2.5]" />
           </button>
 
           {displayName ? (
-            <>
-              {/* Notification Quick Bell (Invitations & Updates) */}
+            <div className="hidden sm:flex items-center gap-2">
+              {/* Notification Quick Bell */}
               <button
                 type="button"
                 onClick={() => onOpenMemberHub && onOpenMemberHub('invitations')}
@@ -162,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <UserIcon className="w-3.5 h-3.5 text-[#FF2D55]" />
                   )}
                 </div>
-                <span className="text-xs font-bold text-slate-900 truncate max-w-[90px] xl:max-w-[120px] hidden md:inline-block">
+                <span className="text-xs font-bold text-slate-900 truncate max-w-[85px] xl:max-w-[110px] hidden md:inline-block">
                   {displayName}
                 </span>
                 <button
@@ -177,25 +170,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <LogOut className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </>
+            </div>
           ) : (
             <button
               onClick={() => onOpenAuth('login')}
-              className="px-3.5 xl:px-4 py-2 text-xs xl:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors cursor-pointer"
+              className="hidden sm:inline-block px-3.5 xl:px-4 py-2 text-xs xl:text-sm font-semibold text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors cursor-pointer shrink-0"
             >
               Đăng nhập
             </button>
           )}
-        </div>
 
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer shrink-0"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
@@ -203,29 +196,22 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="lg:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3">
           <nav className="flex flex-col space-y-2 text-sm font-semibold text-slate-700">
             <button
-              onClick={() => handleNavClick('hero')}
-              className="text-left px-3 py-2 rounded-lg text-[#FF2D55] bg-rose-50"
-            >
-              Trang chủ
-            </button>
-            <button
               onClick={() => handleNavClick('opportunities')}
               className="text-left px-3 py-2 rounded-lg hover:bg-slate-50"
             >
               Khám phá
             </button>
             <button
-              onClick={() => handleNavClick('deal-room')}
-              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 text-amber-700 font-bold flex items-center justify-between"
+              onClick={() => handleNavClick('industry-insights')}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-800"
             >
-              <span>Phòng Giao Thương</span>
-              <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded">MỚI</span>
+              Bản tin thị trường
             </button>
             <button
-              onClick={() => handleNavClick('how-it-works')}
+              onClick={() => handleNavClick('deal-room')}
               className="text-left px-3 py-2 rounded-lg hover:bg-slate-50"
             >
-              Cách hoạt động
+              Phòng Giao Thương
             </button>
             <button
               onClick={() => handleNavClick('community-values')}
@@ -273,7 +259,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
-                    <p className="text-xs text-emerald-600 font-medium">Thành viên Cùng Làm</p>
+                    <p className="text-xs text-emerald-600 font-medium">Thành viên J-Network</p>
                   </div>
                 </div>
 

@@ -48,27 +48,24 @@ J-Network được xây dựng theo mô hình **Full-Stack Server-Rendered / Mic
   - Lắng nghe real-time qua Firestore snapshot `collection(db, 'opportunities')`.
   - Bổ sung cơ hội mới sẽ cập nhật tức thì đến toàn bộ các thành viên khác đang truy cập.
 
-### 2.3. Commercial Deal Room B2B (Phòng Giao Thương Chiến Lược)
-Đây là phân hệ nâng cấp đột phá dưới sự bảo trợ của Giám đốc Kinh doanh (CCO) và Chuyên gia Sản phẩm:
+### 2.3. Công Cụ Hỗ Trợ Đàm Phán & Soạn Thảo Hợp Tác Thực Tế (B2B Deal Room & MOU Builder)
+Loại bỏ hoàn toàn các số liệu ảo hoặc deal giả định; cung cấp công cụ làm việc thực tế cho người dùng:
 
-1. **AI Deal Validator (Thẩm định thương vụ AI)**:
-   - Nhận diện năng lực đóng góp của Bên A và Bên B.
-   - Trả về điểm số khả thi thương mại (`dealFeasibilityScore` từ 65 - 98).
-   - Tự động thiết kế công thức phân chia doanh thu ròng (`revenueShareFormula`).
-   - Cảnh báo 2 rủi ro tài chính / công nợ cần đưa vào hợp đồng.
-   - Vạch ra lộ trình thực thi 3 giai đoạn (Tuần 1-2 Pilot ➔ Tháng 1 Chuẩn hóa ➔ Tháng 2-3 Nhân rộng).
+1. **4 Tình huống hợp tác thực tế 1-Click (Practical Quick Presets)**:
+   - Dùng chung mặt bằng F&B / Bán lẻ theo khung giờ (Tiết kiệm 45-50% chi phí thuê).
+   - Xưởng may / cơ khí gia công theo đơn (Tối ưu công suất máy móc nhàn rỗi).
+   - Liên minh kho bãi & gom đơn fulfillment (Tiết kiệm cước vận chuyển đa kênh).
+   - Hợp tác Công nghệ & Kênh phân phối (Chia sẻ doanh thu ròng dựa trên kết quả).
 
-2. **Draft MOU Generator (Biên bản ghi nhớ thỏa thuận sơ bộ)**:
-   - Tự động đóng gói nội dung đàm phán thành văn bản 1 trang với đầy đủ điều khoản mục đích, cam kết hai bên và cơ chế hòa giải tranh chấp.
-   - Nút **Sao chép 1-Click** sao chép tức thì vào clipboard để chia sẻ qua Zalo, Email, hoặc in thành văn bản.
+2. **AI Deal Validator & Risk Analyzer**:
+   - Nhận diện nghĩa vụ đóng góp thực tế của Bên A và Bên B.
+   - Tính toán công thức phân chia doanh thu ròng (`revenueShareFormula`) công bằng.
+   - Cảnh báo 2 rủi ro thực tế (công nợ, chi phí, dữ liệu khách hàng) cần đưa vào hợp đồng.
+   - Lập lộ trình chạy thử nghiệm (Pilot 14-30 ngày).
 
-3. **Sàn Quản Trị Pipeline Cơ Hội**:
-   - Quản trị các thương vụ theo trạng thái tiến trình giao thương.
-   - Nút **"Vào Deal Room"** đẩy toàn bộ dữ liệu đối tác vào form AI để phân tích trong 1 giây.
-
-4. **Hệ Thống Tín Nhiệm Doanh Nghiệp (J-Trust Score)**:
-   - Xếp hạng 3 cấp bậc: Bạc (Silver 70-84), Vàng (Gold 85-94), Kim Cương (Diamond 95-100).
-   - Dựa trên 3 trụ cột: Pháp lý doanh nghiệp (40%), Lịch sử thực thi (35%), Bảo chứng mạng lưới (25%).
+3. **Biên Bản Ghi Nhớ Thỏa Thuận 1 Trang (1-Page Fast MOU)**:
+   - Đóng gói toàn bộ thỏa thuận thành văn bản sơ bộ có thể dùng ngay.
+   - Tích hợp nút **"Sao chép gửi Zalo"** và nút **"Tải file .txt"** để mang vào cuộc họp thực tế.
 
 ---
 
@@ -77,6 +74,7 @@ J-Network được xây dựng theo mô hình **Full-Stack Server-Rendered / Mic
 | Endpoint | Phương thức | Chức năng | Phản hồi chính |
 | :--- | :--- | :--- | :--- |
 | `/api/health` | `GET` | Health check cho Docker container & Cloud Run probe | `{"status":"ok", "timestamp":"..."}` |
+| `/api/ai/market-intelligence` | `GET / POST` | Bản tin nhịp đập thị trường B2B & nghiên cứu xu hướng ngành bằng Gemini 2.5 Flash | `{"success":true, "data": {title, summary, keyTakeaways, actionableOpportunity, ...}}` |
 | `/api/ai/deal-validator` | `POST` | Thẩm định thương vụ B2B, chia sẻ doanh thu & sinh MOU | `{"success":true, "data": {dealFeasibilityScore, draftMOU, ...}}` |
 | `/api/ai/stress-test` | `POST` | Thẩm định tính thiết yếu và mô hình doanh thu của ý tưởng | `{"success":true, "data": {necessityScore, isPainkiller, ...}}` |
 | `/api/ai/generate-ideas` | `POST` | Gợi ý ý tưởng giải quyết nhu cầu phổ quát | `{"success":true, "data": [...]}` |

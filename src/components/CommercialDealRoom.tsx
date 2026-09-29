@@ -4,117 +4,131 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Briefcase,
-  TrendingUp,
-  ShieldCheck,
   FileText,
   Sparkles,
-  ArrowRight,
   CheckCircle2,
   AlertTriangle,
-  Building2,
   DollarSign,
   Handshake,
   Clock,
-  Award,
   Copy,
   Check,
-  Filter,
+  Download,
+  Store,
+  Factory,
+  Truck,
+  Code2,
+  ChevronRight,
+  ShieldAlert,
 } from 'lucide-react';
 
-interface DealItem {
-  id: string;
-  title: string;
-  category: string;
-  partyA: string;
-  partyANeed: string;
-  partyAOffer: string;
-  estimatedValue: string;
-  trustScore: number;
-  stage: 'negotiation' | 'mou_signed' | 'executing' | 'open';
-  stageLabel: string;
-  location: string;
-  updatedAt: string;
+export interface CommercialDealRoomProps {
+  initialPrompt?: {
+    partyAResources: string;
+    partyBResources: string;
+    dealType: string;
+    targetGoal: string;
+  } | null;
 }
 
-const SAMPLE_COMMERCIAL_DEALS: DealItem[] = [
+interface PresetScenario {
+  id: string;
+  icon: React.ElementType;
+  label: string;
+  dealType: string;
+  partyAName: string;
+  partyAResources: string;
+  partyBName: string;
+  partyBResources: string;
+  targetGoal: string;
+  investmentBudget: string;
+}
+
+const PRACTICAL_PRESETS: PresetScenario[] = [
   {
-    id: 'deal-01',
-    title: 'Hợp tác nhượng quyền & liên minh phân phối 25 cửa hàng bán lẻ tiện lợi',
-    category: 'Phân phối & Bán lẻ',
-    partyA: 'Công ty Cổ phần Thực phẩm Xanh An Nhiên',
-    partyANeed: 'Mặt bằng vị trí vàng và đối tác quản lý vận hành cơ sở tại Đà Nẵng, Nha Trang',
-    partyAOffer: 'Cung cấp 100% quy trình, hệ sinh thái sản phẩm độc quyền và bảo chứng dòng vốn',
-    estimatedValue: '3.2 Tỷ VNĐ',
-    trustScore: 96,
-    stage: 'mou_signed',
-    stageLabel: 'Đã ký kết MOU',
-    location: 'Đà Nẵng & Duyên hải miền Trung',
-    updatedAt: '2 giờ trước',
+    id: 'space_share',
+    icon: Store,
+    label: 'Dùng chung mặt bằng F&B / Bán lẻ',
+    dealType: 'Chia sẻ mặt bằng kinh doanh theo khung giờ & Tối ưu tiền thuê',
+    partyAName: 'Bên A (Chủ hợp đồng thuê mặt bằng)',
+    partyAResources: 'Mặt bằng 70m² tại trục đường chính, đã hoàn thiện quầy kệ, điện nước, bàn ghế. Hoạt động cà phê từ 6h30 - 17h00.',
+    partyBName: 'Bên B (Mô hình kinh doanh buổi tối)',
+    partyBResources: 'Thương hiệu trà hoa quả & tráng miệng buổi tối, có sẵn tệp khách hàng trẻ, tự quản lý nhân viên ca tối từ 17h30 - 23h00.',
+    targetGoal: 'Chia sẻ 45% tiền thuê mặt bằng hàng tháng (15 triệu/tháng) và cùng chia đôi chi phí điện nước, internet.',
+    investmentBudget: '30 Triệu VNĐ (Đặt cọc 2 tháng tiền thuê chia sẻ)',
   },
   {
-    id: 'deal-02',
-    title: 'Gia công xuất khẩu ODM & tối ưu công suất nhàn rỗi nhà máy may 1.800m²',
-    category: 'Sản xuất & Chuỗi cung ứng',
-    partyA: 'Xưởng May Công nghệ Cao Việt Thắng',
-    partyANeed: 'Đối tác thương hiệu thời trang thiết kế cần sản xuất lô hàng từ 500 - 5.000 sp/tháng',
-    partyAOffer: 'Dây chuyền chuẩn ISO, hỗ trợ lưu kho 30 ngày và linh hoạt điều khoản thanh toán',
-    estimatedValue: '1.8 Tỷ VNĐ/năm',
-    trustScore: 93,
-    stage: 'negotiation',
-    stageLabel: 'Đang đàm phán hợp đồng',
-    location: 'TP. Hồ Chí Minh & Bình Dương',
-    updatedAt: '5 giờ trước',
+    id: 'factory_oem',
+    icon: Factory,
+    label: 'Chủ xưởng may / cơ khí gia công theo đơn',
+    dealType: 'Gia công ODM/OEM tối ưu công suất máy móc nhàn rỗi',
+    partyAName: 'Bên A (Xưởng sản xuất)',
+    partyAResources: 'Xưởng may 600m² tại Bình Chánh với 25 máy may công nghiệp, dư thừa 35% công suất vào các tuần giữa tháng.',
+    partyBName: 'Bên B (Thương hiệu thời trang thiết kế)',
+    partyBResources: 'Thương hiệu bán lẻ online có 80.000 followers, có sẵn mẫu rập và vải, cần gia công lô hàng nhỏ từ 300 - 800 sản phẩm/tháng.',
+    targetGoal: 'Ký hợp đồng gia công ổn định trong 6 tháng, đảm bảo tiêu chuẩn đường may và tiến độ giao hàng trong 10 ngày.',
+    investmentBudget: '80 Triệu VNĐ (Tạm ứng 40% giá trị mỗi lô đơn hàng)',
   },
   {
-    id: 'deal-03',
-    title: 'Tích hợp giải pháp AI tự động hóa chăm sóc khách hàng vào chuỗi phòng khám',
-    category: 'Công nghệ & Y tế',
-    partyA: 'Phòng khám Đa khoa Sài Gòn Medic',
-    partyANeed: 'Giải pháp phần mềm CRM + AI nhận diện bệnh án và đặt lịch không tắc nghẽn',
-    partyAOffer: 'Ngân sách triển khai trọn gói + Chia sẻ 5% doanh thu thặng dư từ lượng bệnh nhân tăng',
-    estimatedValue: '850 Triệu VNĐ',
-    trustScore: 98,
-    stage: 'executing',
-    stageLabel: 'Đang triển khai thực tế',
-    location: 'Hà Nội & TP. Hồ Chí Minh',
-    updatedAt: '1 ngày trước',
+    id: 'warehouse_fulfillment',
+    icon: Truck,
+    label: 'Liên minh kho bãi & gom đơn logistics',
+    dealType: 'Dùng chung kho fulfillment & Tối ưu cước bưu chính',
+    partyAName: 'Bên A (Chủ kho bãi)',
+    partyAResources: 'Kho chứa 200m² đạt chuẩn PCCC tại Tân Bình, có giá kệ, camera an ninh và 2 nhân viên đóng gói chuyên nghiệp.',
+    partyBName: 'Bên B (Shop kinh doanh online)',
+    partyBResources: 'Doanh số 120 - 200 đơn hàng/ngày, cần không gian lưu trữ 30m² và đội ngũ phụ trách đóng hàng giao trong ngày.',
+    targetGoal: 'Giảm 30% chi phí thuê kho riêng lẻ và gom sản lượng để đàm phán cước vận chuyển chiết khấu 15% với bưu cục.',
+    investmentBudget: '12 Triệu VNĐ/tháng (Phí lưu kho & đóng gói trọn gói)',
   },
   {
-    id: 'deal-04',
-    title: 'Tìm Nhà đầu tư thiên thần (Angel Investor) mở rộng nền tảng LogTech nông sản',
-    category: 'Đầu tư & Vốn',
-    partyA: 'Dự án Nông sản Kết Nối Vùng Miền',
-    partyANeed: '1.5 Tỷ VNĐ vốn lưu động mở rộng thêm 3 kho trung chuyển lạnh tại ĐBSCL',
-    partyAOffer: '15% cổ phần ưu đãi cổ tức cố định 18%/năm + Quyền tham gia ban kiểm soát',
-    estimatedValue: '1.5 Tỷ VNĐ',
-    trustScore: 91,
-    stage: 'open',
-    stageLabel: 'Mở nhận hồ sơ',
-    location: 'Cần Thơ & Miền Tây',
-    updatedAt: 'Hôm nay',
+    id: 'tech_distribution',
+    icon: Code2,
+    label: 'Hợp tác Công nghệ & Kênh phân phối',
+    dealType: 'Chia sẻ doanh thu ròng (Net Revenue Share) dựa trên kết quả bán lẻ',
+    partyAName: 'Bên A (Đơn vị giải pháp phần mềm)',
+    partyAResources: 'Hệ thống phần mềm quản lý kho & bán hàng đa kênh tự động, chịu trách nhiệm bảo trì kỹ thuật và hướng dẫn sử dụng.',
+    partyBName: 'Bên B (Doanh nghiệp phân phối / Chuỗi cửa hàng)',
+    partyBResources: 'Mạng lưới 20 đại lý bán buôn và tệp 1.500 khách hàng doanh nghiệp thân thiết.',
+    targetGoal: 'Triển khai giải pháp cho 50 đại lý trong 90 ngày, Bên A nhận 25% doanh thu bản quyền ròng mỗi tháng.',
+    investmentBudget: 'Tự cân đối nguồn lực, không cần chi phí đầu tư phần cứng ban đầu',
   },
 ];
 
-export function CommercialDealRoom() {
-  const [activeTab, setActiveTab] = useState<'pipeline' | 'validator' | 'trust_system'>('validator');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
-
-  // Form State for AI Deal Validator
-  const [partyAName, setPartyAName] = useState<string>('Doanh nghiệp A (Cung ứng sản phẩm)');
-  const [partyAResources, setPartyAResources] = useState<string>(
-    'Sở hữu nhà xưởng 1.200m², sản phẩm đạt chuẩn OCOP 4 sao, năng lực sản xuất 10.000 sản phẩm/tháng nhưng thiếu kênh bán hàng số.'
-  );
-  const [partyBName, setPartyBName] = useState<string>('Đối tác B (Kênh phân phối)');
-  const [partyBResources, setPartyBResources] = useState<string>(
-    'Hệ thống 15 đại lý phân phối tại miền Bắc, kênh TikTok Shop 350.000 followers với doanh số ổn định 300tr/tháng.'
-  );
-  const [dealType, setDealType] = useState<string>('Liên minh phân phối & Chia sẻ doanh thu (Revenue Share)');
-  const [targetGoal, setTargetGoal] = useState<string>('Đạt doanh thu 1 Tỷ/tháng sau 60 ngày triển khai và cùng xây dựng thương hiệu chung.');
-  const [investmentBudget, setInvestmentBudget] = useState<string>('300 Triệu VNĐ (Chi phí Marketing & Mẫu thử)');
+export function CommercialDealRoom({ initialPrompt }: CommercialDealRoomProps = {}) {
+  // Form State
+  const [partyAName, setPartyAName] = useState<string>(PRACTICAL_PRESETS[0].partyAName);
+  const [partyAResources, setPartyAResources] = useState<string>(PRACTICAL_PRESETS[0].partyAResources);
+  const [partyBName, setPartyBName] = useState<string>(PRACTICAL_PRESETS[0].partyBName);
+  const [partyBResources, setPartyBResources] = useState<string>(PRACTICAL_PRESETS[0].partyBResources);
+  const [dealType, setDealType] = useState<string>(PRACTICAL_PRESETS[0].dealType);
+  const [targetGoal, setTargetGoal] = useState<string>(PRACTICAL_PRESETS[0].targetGoal);
+  const [investmentBudget, setInvestmentBudget] = useState<string>(PRACTICAL_PRESETS[0].investmentBudget);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [dealResult, setDealResult] = useState<any | null>(null);
   const [isCopied, setIsCopied] = useState<boolean>(false);
+
+  // Sync initialPrompt if provided externally (from Industry Insights)
+  React.useEffect(() => {
+    if (initialPrompt) {
+      if (initialPrompt.partyAResources) setPartyAResources(initialPrompt.partyAResources);
+      if (initialPrompt.partyBResources) setPartyBResources(initialPrompt.partyBResources);
+      if (initialPrompt.dealType) setDealType(initialPrompt.dealType);
+      if (initialPrompt.targetGoal) setTargetGoal(initialPrompt.targetGoal);
+    }
+  }, [initialPrompt]);
+
+  const handleApplyPreset = (preset: PresetScenario) => {
+    setPartyAName(preset.partyAName);
+    setPartyAResources(preset.partyAResources);
+    setPartyBName(preset.partyBName);
+    setPartyBResources(preset.partyBResources);
+    setDealType(preset.dealType);
+    setTargetGoal(preset.targetGoal);
+    setInvestmentBudget(preset.investmentBudget);
+    setDealResult(null);
+  };
 
   const handleValidateDeal = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,674 +161,434 @@ export function CommercialDealRoom() {
     }
   };
 
-  const handleCopyMOU = () => {
-    if (!dealResult?.draftMOU) return;
-    const text = `
-${dealResult.draftMOU.title}
-Mục đích: ${dealResult.draftMOU.purpose}
+  const getFullMOUText = () => {
+    if (!dealResult?.draftMOU) return '';
+    return `
+======================================================
+${dealResult.draftMOU.title || 'BIÊN BẢN GHI NHỚ HỢP TÁC CHIẾN LƯỢC (MOU)'}
+======================================================
 
-Cam kết Bên A: ${dealResult.draftMOU.commitmentsA}
-Cam kết Bên B: ${dealResult.draftMOU.commitmentsB}
+I. THÔNG TIN CÁC BÊN:
+- Bên A: ${partyAName}
+  Nguồn lực đóng góp: ${partyAResources}
+- Bên B: ${partyBName}
+  Nguồn lực đóng góp: ${partyBResources}
 
-Giải quyết tranh chấp: ${dealResult.draftMOU.disputeResolution}
-Khuyến nghị từ CCO J-Network: ${dealResult.ccoRecommendation}
+II. MỤC TIÊU HỢP TÁC:
+${dealResult.draftMOU.purpose || targetGoal}
+
+III. CAM KẾT VÀ NGHĨA VỤ:
+1. Cam kết Bên A:
+   ${dealResult.draftMOU.commitmentsA}
+2. Cam kết Bên B:
+   ${dealResult.draftMOU.commitmentsB}
+
+IV. CƠ CHẾ TÀI CHÍNH & PHÂN CHIA QUYỀN LỢI:
+${dealResult.revenueShareFormula}
+
+V. CÁC ĐIỀU KHOẢN QUẢN TRỊ RỦI RO & BẢO MẬT:
+${dealResult.financialRiskAlerts?.map((r: string, i: number) => `(${i + 1}) ${r}`).join('\n') || ''}
+
+VI. CƠ CHẾ GIẢI QUYẾT TRANH CHẤP & RÚT LUI THIỆN CHÍ:
+${dealResult.draftMOU.disputeResolution}
+
+VII. LỘ TRÌNH THỰC HIỆN THỬ NGHIỆM (PILOT):
+${dealResult.actionMilestones?.map((m: any) => `• ${m.timeline}: ${m.deliverable}`).join('\n') || ''}
+
+VIII. KHUYẾN NGHỊ THỰC THI TỪ GIÁM ĐỐC KINH DOANH:
+"${dealResult.ccoRecommendation}"
+
+---
+Biên bản này được lập thành 02 bản có giá trị pháp lý sơ bộ như nhau nhằm ghi nhận thiện chí hợp tác.
+Đại diện Bên A                            Đại diện Bên B
+(Ký, ghi rõ họ tên)                      (Ký, ghi rõ họ tên)
     `.trim();
+  };
 
+  const handleCopyMOU = () => {
+    const text = getFullMOUText();
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2500);
   };
 
-  const filteredDeals =
-    selectedFilter === 'all'
-      ? SAMPLE_COMMERCIAL_DEALS
-      : SAMPLE_COMMERCIAL_DEALS.filter((d) => d.stage === selectedFilter);
+  const handleDownloadMOU = () => {
+    const text = getFullMOUText();
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Bien-Ban-Ghi-Nho-Hop-Tac-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="py-20 bg-gradient-to-b from-slate-50 via-white to-slate-50 text-slate-900 relative overflow-hidden border-t border-b border-slate-200">
-      {/* Subtle Warm Background Glow */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#FF2D55]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
+    <div className="py-16 sm:py-20 bg-slate-50 text-slate-900 relative overflow-hidden border-t border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Header Block */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF2D55] bg-rose-50 border border-rose-100 px-3 py-1 rounded-full mb-3 shadow-2xs">
             <Briefcase className="w-3.5 h-3.5" />
-            <span>Phòng Giao Thương Chiến Lược & Hợp Tác Doanh Nghiệp</span>
+            <span>Công Cụ Hỗ Trợ Đàm Phán & Soạn Thảo Hợp Tác Thực Tế</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 mb-4">
-            Phòng Giao Thương Chiến Lược
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900 mb-3">
+            Phòng Soạn Thảo & Thẩm Định Thỏa Thuận Hợp Tác
           </h2>
-          <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Nơi chuyển hóa nguồn lực tiềm năng thành <span className="text-slate-900 font-bold">thương vụ sinh lời thực tế</span>.
-            Thẩm định dòng tiền, tính toán cơ chế phân chia lợi nhuận và lập biên bản thỏa thuận cùng Trợ lý Giám đốc Kinh doanh AI.
+          <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+            Giúp hai bên làm rõ nghĩa vụ đóng góp, tính toán tỷ lệ chia sẻ doanh thu công bằng và tự động tạo <span className="text-slate-900 font-bold">Biên bản ghi nhớ 1 trang (MOU)</span> để gửi đối tác trước khi ký hợp đồng chính thức.
           </p>
         </div>
 
-        {/* Commercial Highlights Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-[#FF2D55]/30 transition-all">
-            <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-              Giá trị thương vụ lưu chuyển
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 flex items-baseline gap-1">
-              18.5+ <span className="text-sm font-bold text-[#FF2D55]">Tỷ VNĐ</span>
-            </div>
-            <div className="text-xs text-slate-500 mt-2 flex items-center gap-1 font-medium">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
-              <span>+24.6% so với tháng trước</span>
-            </div>
+        {/* Practical Quick Presets Row */}
+        <div className="mb-8">
+          <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[#FF2D55]" />
+            <span>Chọn nhanh mẫu tình huống thực tế thường gặp:</span>
           </div>
-
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-[#FF2D55]/30 transition-all">
-            <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-              Tỷ lệ ký kết thành công
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 flex items-baseline gap-1">
-              78.4%
-            </div>
-            <div className="text-xs text-slate-500 mt-2 flex items-center gap-1 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Thẩm định rủi ro song phương</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-[#FF2D55]/30 transition-all">
-            <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-              Điểm tín nhiệm trung bình
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 flex items-baseline gap-1">
-              92.8 <span className="text-sm font-semibold text-slate-400">/ 100</span>
-            </div>
-            <div className="text-xs text-slate-500 mt-2 flex items-center gap-1 font-medium">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-500" />
-              <span>Được bảo chứng bởi mạng lưới</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-[#FF2D55]/30 transition-all">
-            <div className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">
-              Thời gian chốt thỏa thuận
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-slate-900 flex items-baseline gap-1">
-              4.2 <span className="text-sm font-semibold text-slate-400">ngày</span>
-            </div>
-            <div className="text-xs text-slate-500 mt-2 flex items-center gap-1 font-medium">
-              <Clock className="w-3.5 h-3.5 text-sky-600" />
-              <span>Rút ngắn 75% chu kỳ đàm phán</span>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {PRACTICAL_PRESETS.map((preset) => {
+              const IconComp = preset.icon;
+              const isSelected = dealType === preset.dealType;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleApplyPreset(preset)}
+                  className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                    isSelected
+                      ? 'bg-white border-[#FF2D55] shadow-xs ring-1 ring-[#FF2D55]'
+                      : 'bg-white/80 border-slate-200 hover:border-slate-300 hover:bg-white'
+                  }`}
+                >
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                      isSelected ? 'bg-rose-50 text-[#FF2D55]' : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    <IconComp className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold text-slate-900 leading-snug truncate">
+                      {preset.label}
+                    </div>
+                    <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                      {preset.dealType}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-10 border-b border-slate-200 pb-4">
-          <button
-            onClick={() => setActiveTab('validator')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'validator'
-                ? 'bg-[#FF2D55] text-white shadow-md shadow-[#FF2D55]/20'
-                : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Thẩm Định Hợp Tác & Lập Biên Bản</span>
-          </button>
+        {/* Main Workspace Grid: Form on Left, Output on Right */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Form Input Column */}
+          <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#FF2D55]" />
+                <h3 className="text-sm font-bold text-slate-900">Thông Tin Thỏa Thuận Của Hai Bên</h3>
+              </div>
+              <span className="text-[11px] text-slate-400">Tùy chỉnh linh hoạt</span>
+            </div>
 
-          <button
-            onClick={() => setActiveTab('pipeline')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'pipeline'
-                ? 'bg-[#FF2D55] text-white shadow-md shadow-[#FF2D55]/20'
-                : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <Handshake className="w-4 h-4" />
-            <span>Cơ Hội Giao Thương Đang Đàm Phán</span>
-          </button>
+            <form onSubmit={handleValidateDeal} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Hình thức hợp tác
+                </label>
+                <input
+                  type="text"
+                  value={dealType}
+                  onChange={(e) => setDealType(e.target.value)}
+                  placeholder="VD: Chia sẻ mặt bằng, Gia công OEM, Đại lý phân phối..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55]"
+                  required
+                />
+              </div>
 
-          <button
-            onClick={() => setActiveTab('trust_system')}
-            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'trust_system'
-                ? 'bg-[#FF2D55] text-white shadow-md shadow-[#FF2D55]/20'
-                : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            <span>Hệ Thống Đánh Giá Tín Nhiệm (J-Trust)</span>
-          </button>
-        </div>
+              {/* Party A */}
+              <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900">Bên A (Khởi xướng / Chủ nguồn lực)</span>
+                </div>
+                <input
+                  type="text"
+                  value={partyAName}
+                  onChange={(e) => setPartyAName(e.target.value)}
+                  placeholder="Tên Bên A..."
+                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#FF2D55]"
+                  required
+                />
+                <textarea
+                  rows={2}
+                  value={partyAResources}
+                  onChange={(e) => setPartyAResources(e.target.value)}
+                  placeholder="Nguồn lực mang vào: Mặt bằng, máy móc, xưởng, sản phẩm..."
+                  className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-[#FF2D55] resize-none"
+                  required
+                />
+              </div>
 
-        {/* Tab 1: AI Deal Validator & MOU Generator */}
-        {activeTab === 'validator' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Input Form Column */}
-            <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-[#FF2D55]">
-                  <Briefcase className="w-5 h-5" />
+              {/* Party B */}
+              <div className="bg-slate-50/70 p-3.5 rounded-xl border border-slate-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-900">Bên B (Đối tác liên minh / Vận hành)</span>
+                </div>
+                <input
+                  type="text"
+                  value={partyBName}
+                  onChange={(e) => setPartyBName(e.target.value)}
+                  placeholder="Tên Bên B..."
+                  className="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-[#FF2D55]"
+                  required
+                />
+                <textarea
+                  rows={2}
+                  value={partyBResources}
+                  onChange={(e) => setPartyBResources(e.target.value)}
+                  placeholder="Nguồn lực mang vào: Khách hàng, đội ngũ bán hàng, vốn lưu động..."
+                  className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs text-slate-800 focus:outline-none focus:border-[#FF2D55] resize-none"
+                  required
+                />
+              </div>
+
+              {/* Goals & Budget */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Mục tiêu chính
+                  </label>
+                  <input
+                    type="text"
+                    value={targetGoal}
+                    onChange={(e) => setTargetGoal(e.target.value)}
+                    placeholder="Mục tiêu cụ thể..."
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55]"
+                  />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Thiết Kế Cơ Chế Giao Thương</h3>
-                  <p className="text-xs text-slate-500">Đóng gói điều khoản, thẩm định rủi ro & tạo MOU</p>
+                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                    Chi phí / Đặt cọc dự kiến
+                  </label>
+                  <input
+                    type="text"
+                    value={investmentBudget}
+                    onChange={(e) => setInvestmentBudget(e.target.value)}
+                    placeholder="VD: 15 Triệu/tháng..."
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55]"
+                  />
                 </div>
               </div>
 
-              <form onSubmit={handleValidateDeal} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Loại hình hợp tác thương mại
-                  </label>
-                  <select
-                    value={dealType}
-                    onChange={(e) => setDealType(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
-                  >
-                    <option value="Liên minh phân phối & Chia sẻ doanh thu (Revenue Share)">
-                      Liên minh phân phối & Chia sẻ doanh thu (Revenue Share)
-                    </option>
-                    <option value="Hợp tác nhượng quyền & Chuỗi cung ứng (Franchise)">
-                      Hợp tác nhượng quyền & Chuỗi cung ứng (Franchise)
-                    </option>
-                    <option value="Gia công sản xuất ODM / Tối ưu công suất dư thừa">
-                      Gia công sản xuất ODM / Tối ưu công suất dư thừa
-                    </option>
-                    <option value="Góp vốn & Hợp tác đầu tư thiên thần (Equity Share)">
-                      Góp vốn & Hợp tác đầu tư thiên thần (Equity Share)
-                    </option>
-                    <option value="Chuyển giao công nghệ & Cố vấn C-Level">
-                      Chuyển giao công nghệ & Cố vấn C-Level
-                    </option>
-                  </select>
-                </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full mt-2 bg-gradient-to-r from-[#FF2D55] to-[#E01E45] hover:from-[#E01E45] hover:to-[#C01538] text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-[#FF2D55]/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 text-xs sm:text-sm"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Đang Thẩm Định Rủi Ro & Soạn Thảo MOU...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Thẩm Định Rủi Ro & Xuất Biên Bản Thỏa Thuận (MOU)</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Đại diện Bên A
-                    </label>
-                    <input
-                      type="text"
-                      value={partyAName}
-                      onChange={(e) => setPartyAName(e.target.value)}
-                      placeholder="VD: Cty A (Cung ứng)"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
-                      required
-                    />
+          {/* Results Output Column */}
+          <div className="lg:col-span-7 space-y-5">
+            {dealResult ? (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-5"
+              >
+                {/* 1. Fast Assessment & Revenue Share Formula */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+                    <div>
+                      <div className="text-[11px] font-bold text-[#FF2D55] uppercase tracking-wider mb-0.5">
+                        Đánh giá tính khả thi thực tế
+                      </div>
+                      <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+                        {dealResult.commercialVerdict}
+                      </h4>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-right shrink-0">
+                      <span className="text-[10px] text-slate-500 uppercase block font-semibold">Độ tương thích</span>
+                      <span className="text-lg font-black text-[#FF2D55]">{dealResult.dealFeasibilityScore}/100</span>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Đại diện Bên B
-                    </label>
-                    <input
-                      type="text"
-                      value={partyBName}
-                      onChange={(e) => setPartyBName(e.target.value)}
-                      placeholder="VD: Đối tác B (Kênh bán lẻ)"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
-                      required
-                    />
+
+                  {/* Revenue Sharing */}
+                  <div className="mb-4">
+                    <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Cơ chế tài chính & Phân chia quyền lợi khuyến nghị:</span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-emerald-950 font-medium leading-relaxed bg-emerald-50/80 p-3 rounded-xl border border-emerald-200">
+                      {dealResult.revenueShareFormula}
+                    </p>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Nguồn lực Bên A mang vào thương vụ
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={partyAResources}
-                    onChange={(e) => setPartyAResources(e.target.value)}
-                    placeholder="Năng lực sản xuất, sản phẩm, bằng sáng chế, mặt bằng..."
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55] resize-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Nguồn lực Bên B mang vào thương vụ
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={partyBResources}
-                    onChange={(e) => setPartyBResources(e.target.value)}
-                    placeholder="Tệp khách hàng, mạng lưới phân phối, đội ngũ bán hàng, vốn..."
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55] resize-none"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Mục tiêu thương mại chính
-                    </label>
-                    <input
-                      type="text"
-                      value={targetGoal}
-                      onChange={(e) => setTargetGoal(e.target.value)}
-                      placeholder="Doanh thu, thị phần, số cửa hàng..."
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Ngân sách / Định giá dự kiến
-                    </label>
-                    <input
-                      type="text"
-                      value={investmentBudget}
-                      onChange={(e) => setInvestmentBudget(e.target.value)}
-                      placeholder="VD: 500 Triệu VNĐ"
-                      className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full mt-4 bg-gradient-to-r from-[#FF2D55] to-[#E01E45] hover:from-[#E01E45] hover:to-[#C01538] text-white font-bold py-3 px-4 rounded-xl shadow-md shadow-[#FF2D55]/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Trợ Lý AI Đang Thẩm Định Dòng Tiền & Rủi Ro...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      <span>Thẩm Định Khả Thi & Lập Biên Bản Hợp Tác</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* Results Column */}
-            <div className="lg:col-span-7 space-y-6">
-              {dealResult ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="space-y-6"
-                >
-                  {/* Verdict & Score Card */}
-                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs relative">
-                    <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
-                      <div>
-                        <div className="text-xs uppercase tracking-wider text-[#FF2D55] font-bold mb-1">
-                          Đánh giá từ Giám Đốc Kinh Doanh
+                  {/* 2 Practical Risk Clauses */}
+                  <div className="mb-4">
+                    <div className="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#FF2D55]" />
+                      <span>2 Điểm rủi ro thực tế cần đưa vào điều khoản hợp đồng:</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {dealResult.financialRiskAlerts?.map((risk: string, idx: number) => (
+                        <div
+                          key={idx}
+                          className="text-xs text-slate-800 bg-rose-50/50 border border-rose-100 rounded-xl p-2.5 flex items-start gap-2"
+                        >
+                          <span className="text-[#FF2D55] font-bold shrink-0">#{idx + 1}</span>
+                          <span className="leading-relaxed">{risk}</span>
                         </div>
-                        <h4 className="text-lg sm:text-xl font-bold text-slate-900">
-                          {dealResult.commercialVerdict}
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Quick Milestones */}
+                  <div>
+                    <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Lộ trình chạy thử nghiệm đề xuất:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {dealResult.actionMilestones?.map((m: any, idx: number) => (
+                        <div key={idx} className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                          <div className="font-bold text-slate-800 mb-0.5">{m.timeline}</div>
+                          <div className="text-slate-600 leading-snug line-clamp-2">{m.deliverable}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Draft MOU Paper Card */}
+                {dealResult.draftMOU && (
+                  <div className="bg-white border-2 border-slate-300 rounded-2xl p-5 sm:p-6 shadow-sm relative">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-slate-700" />
+                        <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wide">
+                          Biên Bản Ghi Nhớ Thỏa Thuận Sơ Bộ (MOU 1 Trang)
                         </h4>
                       </div>
 
-                      <div className="flex items-center gap-3 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2.5">
-                        <div className="text-right">
-                          <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-                            Điểm khả thi
-                          </div>
-                          <div className="text-2xl font-black text-[#FF2D55]">
-                            {dealResult.dealFeasibilityScore}/100
-                          </div>
-                        </div>
-                        <TrendingUp className="w-7 h-7 text-emerald-600" />
-                      </div>
-                    </div>
-
-                    {/* Win-win Analysis */}
-                    <div className="mb-5">
-                      <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <Handshake className="w-4 h-4 text-sky-600" />
-                        <span>Phân Tích Tương Hỗ Đôi Bên Cùng Có Lợi</span>
-                      </div>
-                      <p className="text-slate-700 text-sm leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                        {dealResult.winWinAnalysis}
-                      </p>
-                    </div>
-
-                    {/* Revenue Sharing Formula */}
-                    <div className="mb-5">
-                      <div className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <DollarSign className="w-4 h-4 text-emerald-600" />
-                        <span>Cơ Chế Phân Chia Doanh Thu Khuyến Nghị</span>
-                      </div>
-                      <p className="text-emerald-900 text-sm font-semibold leading-relaxed bg-emerald-50 p-3.5 rounded-xl border border-emerald-200">
-                        {dealResult.revenueShareFormula}
-                      </p>
-                    </div>
-
-                    {/* Financial Risk Alerts */}
-                    <div className="mb-5">
-                      <div className="text-xs font-bold text-rose-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4 text-rose-600" />
-                        <span>2 Điểm Rủi Ro Cần Lưu Ý Vào Điều Khoản Hợp Đồng</span>
-                      </div>
-                      <div className="space-y-2">
-                        {dealResult.financialRiskAlerts?.map((risk: string, idx: number) => (
-                          <div
-                            key={idx}
-                            className="text-xs text-slate-800 bg-rose-50/70 border border-rose-200 rounded-xl p-3 flex items-start gap-2.5"
-                          >
-                            <span className="text-[#FF2D55] font-black shrink-0">#{idx + 1}</span>
-                            <span className="leading-relaxed">{risk}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 30-60-90 Day Milestones */}
-                    <div>
-                      <div className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-amber-600" />
-                        <span>Lộ Trình Hành Động Triển Khai Thực Tế</span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                        {dealResult.actionMilestones?.map((m: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="bg-slate-50 border border-slate-200 rounded-xl p-3"
-                          >
-                            <div className="text-[11px] font-bold text-amber-700 mb-1">
-                              {m.timeline}
-                            </div>
-                            <div className="text-xs text-slate-700 leading-snug">
-                              {m.deliverable}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Draft MOU Card */}
-                  {dealResult.draftMOU && (
-                    <div className="bg-amber-50/40 border border-dashed border-amber-300 rounded-2xl p-6 relative">
-                      <div className="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-amber-200">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-amber-700" />
-                          <h4 className="text-base font-bold text-slate-900">
-                            Biên Bản Thỏa Thuận Giao Thương Sơ Bộ
-                          </h4>
-                        </div>
+                      <div className="flex items-center gap-2">
                         <button
+                          type="button"
                           onClick={handleCopyMOU}
-                          className="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-300 shadow-2xs"
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200"
                         >
                           {isCopied ? (
                             <>
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="text-emerald-700">Đã Sao Chép!</span>
+                              <span className="text-emerald-700">Đã chép!</span>
                             </>
                           ) : (
                             <>
                               <Copy className="w-3.5 h-3.5 text-slate-600" />
-                              <span>Sao Chép Bản Thỏa Thuận</span>
+                              <span>Sao chép gửi Zalo</span>
                             </>
                           )}
                         </button>
-                      </div>
 
-                      <div className="bg-white p-4 rounded-xl border border-slate-200 text-xs text-slate-800 space-y-3 font-mono shadow-2xs">
-                        <div className="font-bold text-slate-900 text-center uppercase tracking-wide">
-                          {dealResult.draftMOU.title}
-                        </div>
-                        <div>
-                          <strong className="text-slate-900">1. Mục đích:</strong>{' '}
-                          {dealResult.draftMOU.purpose}
-                        </div>
-                        <div>
-                          <strong className="text-slate-900">2. Cam kết Bên A:</strong>{' '}
-                          {dealResult.draftMOU.commitmentsA}
-                        </div>
-                        <div>
-                          <strong className="text-slate-900">3. Cam kết Bên B:</strong>{' '}
-                          {dealResult.draftMOU.commitmentsB}
-                        </div>
-                        <div>
-                          <strong className="text-slate-900">4. Cơ chế giải quyết:</strong>{' '}
-                          {dealResult.draftMOU.disputeResolution}
-                        </div>
+                        <button
+                          type="button"
+                          onClick={handleDownloadMOU}
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-[#FF2D55] text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Tải file .txt</span>
+                        </button>
                       </div>
+                    </div>
 
-                      {/* CCO Golden Recommendation */}
-                      <div className="mt-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl">
-                        <div className="text-[11px] font-bold text-[#FF2D55] uppercase tracking-wider mb-1 flex items-center gap-1">
-                          <Award className="w-3.5 h-3.5" />
-                          <span>Chiến Lược Từ Giám Đốc Kinh Doanh:</span>
-                        </div>
-                        <p className="text-xs text-slate-800 leading-relaxed italic">
-                          "{dealResult.ccoRecommendation}"
-                        </p>
+                    {/* MOU Formatted Document Box */}
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-800 font-mono space-y-3 leading-relaxed shadow-inner max-h-[350px] overflow-y-auto">
+                      <div className="font-bold text-center text-slate-900 uppercase">
+                        {dealResult.draftMOU.title || 'BIÊN BẢN GHI NHỚ HỢP TÁC CHIẾN LƯỢC'}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900">1. Mục đích:</strong>{' '}
+                        {dealResult.draftMOU.purpose || targetGoal}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900">2. Cam kết Bên A:</strong>{' '}
+                        {dealResult.draftMOU.commitmentsA}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900">3. Cam kết Bên B:</strong>{' '}
+                        {dealResult.draftMOU.commitmentsB}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900">4. Phân chia quyền lợi:</strong>{' '}
+                        {dealResult.revenueShareFormula}
+                      </div>
+                      <div>
+                        <strong className="text-slate-900">5. Hòa giải tranh chấp:</strong>{' '}
+                        {dealResult.draftMOU.disputeResolution}
                       </div>
                     </div>
-                  )}
-                </motion.div>
-              ) : (
-                /* Empty / Intro state */
-                <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[460px] shadow-xs">
-                  <div className="w-16 h-16 rounded-2xl bg-rose-50 flex items-center justify-center text-[#FF2D55] mb-4 border border-rose-100">
-                    <Handshake className="w-8 h-8" />
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900 mb-2">
-                    Chưa Có Dữ Liệu Thẩm Định Thương Vụ
-                  </h4>
-                  <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-                    Nhập nguồn lực của hai bên ở cột bên trái và bấm{' '}
-                    <span className="text-[#FF2D55] font-bold">"Thẩm Định Khả Thi & Lập Biên Bản Hợp Tác"</span>.
-                    Hệ thống AI sẽ mô phỏng góc nhìn của một Giám đốc Kinh doanh cấp cao để đưa ra công thức chia lợi nhuận và biên bản hợp tác chính thức.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg text-left text-xs text-slate-600">
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                      <div className="font-bold text-slate-900 mb-0.5">1. Khớp nối nguồn lực</div>
-                      <div>Cân đối thực lực, bù trừ điểm yếu giữa đôi bên.</div>
-                    </div>
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                      <div className="font-bold text-slate-900 mb-0.5">2. Cơ chế tài chính</div>
-                      <div>Phân chia doanh thu, cổ phần & bảo vệ dòng tiền.</div>
-                    </div>
-                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                      <div className="font-bold text-slate-900 mb-0.5">3. Biên bản thỏa thuận</div>
-                      <div>Văn bản thỏa thuận sơ bộ sẵn sàng tiến hành.</div>
+
+                    {/* CCO Recommendation */}
+                    <div className="mt-3.5 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 leading-relaxed">
+                      <strong className="text-amber-900">Lời khuyên xúc tiến:</strong> "{dealResult.ccoRecommendation}"
                     </div>
                   </div>
+                )}
+              </motion.div>
+            ) : (
+              /* Empty Initial State - Clear, practical guide */
+              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center flex flex-col items-center justify-center min-h-[420px] shadow-xs">
+                <div className="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center text-[#FF2D55] mb-4 border border-rose-100">
+                  <Handshake className="w-7 h-7" />
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 2: Commercial Deals Pipeline */}
-        {activeTab === 'pipeline' && (
-          <div className="space-y-6">
-            {/* Filter Row */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-xl shadow-xs">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                <Filter className="w-4 h-4 text-[#FF2D55]" />
-                <span>Lọc theo giai đoạn đàm phán:</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[
-                  { key: 'all', label: 'Tất cả thương vụ' },
-                  { key: 'open', label: 'Đang mở nhận hồ sơ' },
-                  { key: 'negotiation', label: 'Đang đàm phán' },
-                  { key: 'mou_signed', label: 'Đã ký thỏa thuận' },
-                  { key: 'executing', label: 'Đang triển khai' },
-                ].map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => setSelectedFilter(item.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                      selectedFilter === item.key
-                        ? 'bg-[#FF2D55] text-white'
-                        : 'bg-slate-100 text-slate-700 hover:text-slate-900 hover:bg-slate-200'
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Deals Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredDeals.map((deal) => (
-                <div
-                  key={deal.id}
-                  className="bg-white border border-slate-200 hover:border-[#FF2D55]/40 rounded-2xl p-6 transition-all duration-300 flex flex-col justify-between shadow-xs hover:shadow-md"
-                >
-                  <div>
-                    {/* Top Meta */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
-                      <span className="text-xs font-bold text-[#FF2D55] uppercase tracking-wider">
-                        {deal.category}
-                      </span>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        <span>{deal.stageLabel}</span>
-                      </div>
-                    </div>
-
-                    <h4 className="text-base sm:text-lg font-bold text-slate-900 mb-2 leading-snug">
-                      {deal.title}
-                    </h4>
-
-                    <div className="text-xs text-slate-500 mb-4 flex items-center gap-2">
-                      <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{deal.partyA}</span>
-                      <span>·</span>
-                      <span>{deal.location}</span>
-                    </div>
-
-                    <div className="space-y-2.5 mb-5 text-xs">
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                        <strong className="text-slate-900">Bên A Cung Cấp:</strong>{' '}
-                        <span className="text-slate-700">{deal.partyAOffer}</span>
-                      </div>
-                      <div className="bg-rose-50/50 p-2.5 rounded-xl border border-rose-100">
-                        <strong className="text-[#FF2D55]">Bên A Tìm Kiếm:</strong>{' '}
-                        <span className="text-slate-700">{deal.partyANeed}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom Stats & Action */}
-                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-                        Định giá thương vụ
-                      </div>
-                      <div className="text-sm font-black text-emerald-700">
-                        {deal.estimatedValue}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
-                          Điểm Tín Nhiệm
-                        </div>
-                        <div className="text-xs font-bold text-[#FF2D55]">
-                          {deal.trustScore}/100
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setPartyAName(deal.partyA);
-                          setPartyAResources(deal.partyAOffer);
-                          setPartyBName('Đối tác kết nối');
-                          setPartyBResources(deal.partyANeed);
-                          setActiveTab('validator');
-                        }}
-                        className="px-3.5 py-2 bg-slate-900 hover:bg-[#FF2D55] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                      >
-                        <span>Vào Thẩm Định</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Tab 3: J-Trust Scoring System */}
-        {activeTab === 'trust_system' && (
-          <div className="bg-white border border-slate-200 rounded-2xl p-8 max-w-4xl mx-auto shadow-xs">
-            <div className="text-center max-w-xl mx-auto mb-10">
-              <div className="w-12 h-12 rounded-2xl bg-rose-50 text-[#FF2D55] border border-rose-100 flex items-center justify-center mx-auto mb-3">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <h3 className="text-2xl font-black text-slate-900 mb-2">
-                Hệ Thống Đo Lường Tín Nhiệm Doanh Nghiệp (J-Trust)
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Thước đo độc quyền của J-Network giúp loại bỏ 95% đối tác ảo, giúp các Giám đốc Kinh doanh và Nhà đầu tư đưa ra quyết định hợp tác trong vài ngày thay vì hàng tháng ròng.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#FF2D55] mb-2">
-                  1. Xác thực Thực Thể Pháp Lý (40%)
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Kiểm tra mã số thuế, trụ sở hoạt động, đại diện pháp luật và lịch sử tín dụng doanh nghiệp qua cổng thông tin quốc gia.
+                <h4 className="text-base font-bold text-slate-900 mb-2">
+                  Bắt Đầu Soạn Thảo Biên Bản Thỏa Thuận
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
+                  Chọn một trong 4 mẫu tình huống thực tế phía trên hoặc nhập nguồn lực của hai bên, sau đó bấm{' '}
+                  <span className="text-[#FF2D55] font-bold">"Thẩm Định Rủi Ro & Xuất Biên Bản Thỏa Thuận (MOU)"</span>.
+                  Hệ thống sẽ cung cấp một bản thỏa thuận 1 trang để hai bên làm cơ sở thảo luận trước khi ký kết.
                 </p>
-              </div>
 
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                <div className="text-xs font-bold uppercase tracking-wider text-sky-700 mb-2">
-                  2. Lịch Sử Thực Thi Cam Kết (35%)
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Đánh giá mức độ đúng hạn trong giải ngân dòng vốn, giao nhận hàng mẫu và minh bạch báo cáo đối soát doanh thu.
-                </p>
-              </div>
-
-              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                <div className="text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">
-                  3. Bảo Chứng Từ Mạng Lưới (25%)
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Điểm số được cộng dồn khi nhận được sự giới thiệu và bảo lãnh uy tín từ ít nhất 3 thành viên cấp Vàng hoặc Kim Cương trong hệ thống.
-                </p>
-              </div>
-            </div>
-
-            {/* Trust Badges Tier */}
-            <div className="border-t border-slate-200 pt-6">
-              <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4 text-center">
-                Các Cấp Bậc Tín Nhiệm Doanh Nghiệp Trên J-Network
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center">
-                  <div className="text-sm font-bold text-slate-800 mb-1">Hạng Bạc</div>
-                  <div className="text-xs text-slate-600 font-mono font-bold mb-2">Điểm 70 - 84</div>
-                  <p className="text-[11px] text-slate-500">Đã xác minh định danh và có ít nhất 1 cơ hội hợp tác thực tế thành công.</p>
-                </div>
-
-                <div className="bg-amber-50/60 border border-amber-200 p-4 rounded-xl text-center">
-                  <div className="text-sm font-bold text-amber-800 mb-1">Hạng Vàng</div>
-                  <div className="text-xs text-amber-700 font-mono font-bold mb-2">Điểm 85 - 94</div>
-                  <p className="text-[11px] text-amber-900/80">Có từ 3 thương vụ ký kết hợp tác thành công, ưu tiên hiển thị đầu trang Giao Thương.</p>
-                </div>
-
-                <div className="bg-rose-50/60 border border-rose-200 p-4 rounded-xl text-center">
-                  <div className="text-sm font-bold text-[#FF2D55] mb-1">Hạng Kim Cương</div>
-                  <div className="text-xs text-[#FF2D55] font-mono font-bold mb-2">Điểm 95 - 100</div>
-                  <p className="text-[11px] text-rose-900/80">Đối tác chiến lược bảo chứng nguồn vốn, có quyền triệu tập phòng đàm phán cấp cao.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-lg text-left text-xs">
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div className="font-bold text-slate-900 mb-0.5">1. Minh bạch quyền lợi</div>
+                    <div className="text-slate-500">Thống nhất tỷ lệ chia sẻ doanh thu và chi phí gánh chịu.</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div className="font-bold text-slate-900 mb-0.5">2. Phòng ngừa rủi ro</div>
+                    <div className="text-slate-500">Cài đặt điều khoản đối soát công nợ và rút lui thiện chí.</div>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                    <div className="font-bold text-slate-900 mb-0.5">3. Sử dụng ngay</div>
+                    <div className="text-slate-500">Sao chép gửi qua Zalo hoặc tải file văn bản in ra họp.</div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

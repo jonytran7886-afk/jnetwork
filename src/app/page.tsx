@@ -19,13 +19,24 @@ import { AuthModal } from '../components/AuthModal';
 import { CommunityPrinciplesModal } from '../components/CommunityPrinciplesModal';
 import { MemberHubModal } from '../components/MemberHubModal';
 import { CommercialDealRoom } from '../components/CommercialDealRoom';
+import { MarketPulseTicker } from '../components/MarketPulseTicker';
+import { IndustryInsightsSection } from '../components/IndustryInsightsSection';
 import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
+import { INITIAL_INDUSTRY_INSIGHTS, IndustryInsightItem } from '../data/industryInsightsData';
 
 export default function HomePage() {
   const [opportunities, setOpportunities] = useState<OpportunityItem[]>(INITIAL_OPPORTUNITIES);
   const [activeHeroTab, setActiveHeroTab] = useState<'project' | 'resource' | 'space' | 'partner'>('project');
   const [selectedOpportunityCategory, setSelectedOpportunityCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Deal Room Prompt State from Industry Insights
+  const [dealRoomPrompt, setDealRoomPrompt] = useState<{
+    partyAResources: string;
+    partyBResources: string;
+    dealType: string;
+    targetGoal: string;
+  } | null>(null);
 
   // Authentication & Hub state
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
@@ -228,6 +239,15 @@ export default function HomePage() {
         }}
       />
 
+      {/* Real-time Market Pulse Ticker */}
+      <MarketPulseTicker
+        insights={INITIAL_INDUSTRY_INSIGHTS}
+        onSelectInsight={() => {
+          scrollToSection('industry-insights');
+        }}
+        onExploreAll={() => scrollToSection('industry-insights')}
+      />
+
       {/* Main Content */}
       <main className="flex-1">
         {/* 1. Hero Section */}
@@ -264,9 +284,23 @@ export default function HomePage() {
           }}
         />
 
-        {/* 5. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
+        {/* 5. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
+        <IndustryInsightsSection
+          onOpenDealRoomWithPrompt={(prompt) => {
+            setDealRoomPrompt(prompt);
+            scrollToSection('deal-room');
+            showToast('Đã nạp dữ liệu thương vụ vào Phòng Giao Thương!');
+          }}
+          onOpenPostDemand={() => setIsPostDemandOpen(true)}
+          onExploreOpportunities={(cat) => {
+            if (cat) setSelectedOpportunityCategory(cat);
+            scrollToSection('opportunities');
+          }}
+        />
+
+        {/* 6. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
         <section id="deal-room">
-          <CommercialDealRoom />
+          <CommercialDealRoom initialPrompt={dealRoomPrompt} />
         </section>
 
         {/* 6. Câu chuyện thành công (Success Stories) */}
