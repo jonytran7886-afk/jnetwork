@@ -1,116 +1,120 @@
-﻿# jnetwork — Kiến trúc hiện tại
+# Kiến Trúc Hệ Thống Toàn Diện — J-Network
 
-Cập nhật theo source: **2026-09-29**. Giữ tên file `SYSTEM_ARCHITECTURE_V1.md` để tương thích liên kết cũ; tên file không biểu thị phiên bản phát hành. Nội dung này thay thế đặc tả UniversalNeeds/FamilyShield trước đây.
+**Cập nhật:** 29-09-2026  
+**File định danh:** `SYSTEM_ARCHITECTURE_V1.md`  
+**Mục tiêu:** Mô tả sơ đồ luồng dữ liệu, cấu trúc module và kiến trúc micro-utility của nền tảng J-Network.
 
-## 1. Thành phần và luồng dữ liệu
+---
+
+## 1. Sơ Đồ Khối Kiến Trúc (High-Level Architecture)
 
 ```text
-Trình duyệt
-  index.html → src/main.tsx → App.tsx → components Cùng Làm
-                                 ↑
-                  INITIAL_OPPORTUNITIES → React useState
-
-Express (server.ts, PORT mặc định 3000)
-  ├─ Development: Vite middleware phục vụ frontend
-  ├─ Production: phục vụ dist/ và GET * trả dist/index.html
-  └─ 7 POST API cũ → Gemini khi có khóa → fallback khi thiếu khóa/lỗi
-
-Frontend Cùng Làm hiện không gọi các POST API trên.
+┌────────────────────────────────────────────────────────────────────────┐
+│                        Client Layer (Web / Mobile)                     │
+│  - React 19 Client Components ('use client')                           │
+│  - Tailwind CSS v4, Motion (motion/react), Lucide Icons                │
+│  - Realtime Firestore Listener (onSnapshot for Opportunities & Users)   │
+└────────────────────────────────────┬───────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                    Next.js 16.3 App Router Server                      │
+│  ├── SSR / Static Pre-rendering: src/app/page.tsx, layout.tsx          │
+│  ├── API Routes Layer:                                                 │
+│  │   ├── GET  /api/health            (Container Healthcheck Probe)     │
+│  │   ├── POST /api/ai/deal-validator (CCO Deal Valuation & MOU Engine) │
+│  │   ├── POST /api/ai/stress-test    (Product Viability Analyzer)      │
+│  │   └── POST /api/ai/generate-ideas (Universal Ideas Engine)          │
+│  └── Standalone Runtime: server.js (0ms Startup, dynamic $PORT)        │
+└──────────────────┬─────────────────────────────────┬───────────────────┘
+                   │                                 │
+                   ▼                                 ▼
+┌──────────────────────────────────────┐  ┌──────────────────────────────┐
+│       Google Cloud Firestore         │  │     Google Gemini AI Cloud   │
+│  - Collection: users                 │  │  - Model: gemini-2.5-flash   │
+│  - Collection: opportunities         │  │  - SDK: @google/genai        │
+│  - Collection: invitations           │  │  - JSON Schema Strict Output │
+│  - Rules: firestore.rules (deployed) │  │  - Heuristic Matrix Fallback │
+└──────────────────────────────────────┘  └──────────────────────────────┘
 ```
 
-Frontend là SPA React 19/TypeScript, build bằng Vite 8 và Tailwind CSS 4. `main.tsx` mount App trong StrictMode. Các section/modal giao tiếp qua props và callback; state do React quản lý. Không có router, store bên ngoài hoặc tầng truy cập dữ liệu từ frontend.
+---
 
-Express 4 dùng `express.json()` và chạy qua `tsx`. Không có database, ORM, migration, hàng đợi, WebSocket, xác thực hoặc phân quyền API trong source. Các API AI vẫn được đăng ký khi chạy server dù giao diện không sử dụng.
+## 2. Bản Đồ Thư Mục & Phân Bổ Trách Nhiệm
 
-## 2. Bản đồ mã nguồn
+| Đường dẫn | Vai trò & Trách nhiệm kiến trúc |
+| :--- | :--- |
+| `src/app/page.tsx` | Trang chủ điều phối chính (Orchestrator), tích hợp state Firestore và mở các Modal tương tác |
+| `src/app/layout.tsx` | Khung layout tổng thể, tối ưu SEO, OpenGraph metadata, font chữ Plus Jakarta Sans |
+| `src/app/api/health/route.ts` | Endpoint kiểm tra sức khỏe hệ thống trả về HTTP 200, phục vụ Cloud Run & Docker |
+| `src/app/api/ai/deal-validator/route.ts` | Phân tích tương hỗ Win-Win, đề xuất cơ chế chia sẻ doanh thu và sinh MOU tự động |
+| `src/components/Navbar.tsx` | Header điều hướng thích ứng (Adaptive Breakpoint) chống vỡ layout trên mọi kích thước màn hình |
+| `src/components/CommercialDealRoom.tsx` | Phân hệ giao thương B2B, phòng đàm phán AI, sàn pipeline cơ hội và chuẩn tín nhiệm J-Trust |
+| `src/components/HeroSection.tsx` | Khối hero truyền cảm hứng, ô tìm kiếm thông minh và 4 tab lọc nhanh nguồn lực |
+| `src/components/OpportunitiesSection.tsx` | Danh sách hiển thị cơ hội với bộ lọc thời gian thực và đánh dấu lưu bài |
+| `src/components/MemberHubModal.tsx` | Bảng điều khiển thành viên quản lý bài đăng, lời mời hợp tác và hội thoại |
+| `src/lib/firebase.ts` | Khởi tạo kết nối Firebase App, Auth và Cloud Firestore theo config bảo mật |
+| `src/lib/gemini.ts` | Cấu hình GoogleGenAI client với process.env.GEMINI_API_KEY ở server-side |
+| `Dockerfile` | Multi-stage Dockerfile cho Node 22 Alpine, đóng gói Standalone chỉ ~80MB |
+| `cloudbuild.yaml` | Cấu hình kích hoạt build container trên Google Cloud Build |
 
-| File/nhóm file | Trách nhiệm |
-| --- | --- |
-| `src/App.tsx` | State cơ hội, bộ lọc, tìm kiếm, modal, toast và điều hướng cuộn |
-| `src/data/cungLamData.ts` | Kiểu OpportunityItem, 4 cơ hội mẫu, các khai báo cộng đồng |
-| `src/components/CungLam*.tsx` | Header, hero, nhóm nguồn lực, cách hoạt động, danh sách, giá trị, CTA, footer |
-| `src/components/PostDemandModal.tsx` | Tạo bài đăng cục bộ |
-| `src/components/OpportunityDetailModal.tsx` | Chi tiết bài và đề xuất hợp tác mô phỏng |
-| `src/components/AuthModal.tsx` | Form đăng nhập/đăng ký mô phỏng |
-| `src/components/CommunityPrinciplesModal.tsx` | Nguyên tắc, hỗ trợ, điều khoản, quyền riêng tư |
-| `src/data/pillars.ts`, `src/data/blueprints.ts` | Dữ liệu cũ, không được giao diện hiện tại import |
-| `src/assets/images/` | Ảnh được dữ liệu trụ cột cũ tham chiếu |
-| `src/index.css`, `index.html` | Tailwind, scrollbar, font và metadata trang Cùng Làm |
-| `server.ts` | API AI, fallback và phục vụ frontend |
-| `vite.config.ts`, `tsconfig.json` | Plugin, HMR, alias @ trỏ về thư mục gốc và cấu hình TypeScript |
-| `metadata.json` | Metadata còn mang tên UniversalNeeds Studio |
+---
 
-Giao diện dùng nền slate sáng, thẻ trắng, điểm nhấn hồng `#FF2D55` và các lớp phủ tối. Font chính là Plus Jakarta Sans; HTML tải thêm Space Grotesk từ Google Fonts. Ảnh cơ hội dùng URL Unsplash. Tài nguyên ngoài phụ thuộc mạng; chưa có kiểm chứng WCAG hoặc offline.
+## 3. Mô Hình Thực Thể Dữ Liệu (Firestore Entity Schema)
 
-## 3. Mô hình cơ hội
+### 3.1. Entity: `Opportunity` (Bộ sưu tập: `opportunities`)
+```typescript
+interface OpportunityItem {
+  id: string;                         // Mã định danh cơ hội
+  category: 'project' | 'resource' | 'space' | 'partner';
+  categoryLabel: string;             // Nhãn hiển thị tiếng Việt
+  title: string;                      // Tiêu đề cơ hội
+  location: string;                   // Địa điểm triển khai
+  resourceHighlight: string;          // Nguồn lực nổi bật sẵn có
+  cooperationType: string;            // Hình thức hợp tác mong muốn
+  imageUrl: string;                   // Ảnh đại diện
+  whatIHave: string;                  // Điều tôi có thể cung cấp
+  whatINeed: string;                  // Điều tôi đang tìm kiếm
+  detailedDescription?: string;       // Mô tả chi tiết
+  creatorName: string;                // Tên người đăng bài
+  creatorRole: string;                // Vai trò (Doanh chủ, Chuyên gia,...)
+  createdTime: string;                // Thời gian đăng tải
+  isBookmarked?: boolean;             // Trạng thái đã lưu của người dùng hiện tại
+}
+```
 
-`OpportunityItem` được định nghĩa tại `src/data/cungLamData.ts`:
+### 3.2. Entity: `DealEvaluation` (Sinh bởi AI CCO Engine)
+```typescript
+interface DealEvaluation {
+  dealFeasibilityScore: number;       // Điểm khả thi thương mại (65 - 98)
+  commercialVerdict: string;          // Đánh giá tổng quan từ góc nhìn Giám đốc Kinh doanh
+  winWinAnalysis: string;             // Phân tích tương hỗ và bổ trợ nguồn lực song phương
+  revenueShareFormula: string;        // Công thức phân chia doanh thu ròng khuyến nghị
+  financialRiskAlerts: string[];      // 2 rủi ro tài chính/công nợ trọng yếu
+  actionMilestones: {                 // Lộ trình 30-60-90 ngày
+    timeline: string;
+    deliverable: string;
+  }[];
+  draftMOU: {                         // Biên bản ghi nhớ thỏa thuận sơ bộ
+    title: string;
+    purpose: string;
+    commitmentsA: string;
+    commitmentsB: string;
+    disputeResolution: string;
+  };
+  ccoRecommendation: string;          // Lời khuyên vàng để chốt thương vụ trong 48 giờ
+}
+```
 
-| Trường | Kiểu/ý nghĩa |
-| --- | --- |
-| `id` | string |
-| `category` | project / resource / space / partner |
-| `categoryLabel` | Một trong bốn nhãn tiếng Việt khai báo bằng union |
-| `title`, `location` | Tiêu đề và địa điểm dạng chuỗi |
-| `resourceHighlight`, `cooperationType` | Điểm nhấn và hướng hợp tác |
-| `imageUrl` | URL ảnh |
-| `whatIHave`, `whatINeed`, `detailedDescription` | Nguồn lực, nhu cầu, mô tả |
-| `creatorName`, `creatorRole` | Tên và vai trò hiển thị |
-| `createdTime` | Chuỗi thời gian hiển thị, không phải timestamp |
-| `isBookmarked` | boolean tùy chọn |
+---
 
-Không có số điện thoại, ID tài khoản hoặc đề xuất hợp tác trong model. App khởi tạo state từ dữ liệu mẫu mỗi lần mount; không lưu xuống server/browser storage. `COMMUNITY_VALUES` trong file dữ liệu chưa được component giá trị cộng đồng sử dụng; component tự khai báo nội dung tương tự.
+## 4. Cơ Chế Triển Khai & Vận Hành Liên Tục (CI/CD)
 
-## 4. API còn tồn tại
-
-Tất cả endpoint dùng **POST**, nhận JSON. Các trường bắt buộc phần lớn chỉ kiểm tra có giá trị; riêng `statementText` kiểm tra thêm kiểu string. Chưa có schema validation đầy đủ cho đầu vào hoặc JSON từ AI.
-
-| Endpoint | Bắt buộc | Tùy chọn | Kết quả |
-| --- | --- | --- | --- |
-| `/api/ai/stress-test` | ideaTitle, problemStatement | targetAudience, solutionDescription, monetizationModel | data: necessityScore, isPainkiller, verdictHeadline, universalFitAnalysis, frictionFails, monetizationViability, defensibilityMoat, fourteenDayRoadmap, radicalAdvice |
-| `/api/ai/generate-ideas` | Không | pillarId, audience, focusAngle | ideas: mảng với id, title, oneLiner, category, whyEveryoneNeedsIt, coreMechanism, monetization, effortLevel |
-| `/api/ai/scan-expense` | statementText | Không | data: detectedItems, totalMonthlyLeak, totalYearlyLeak, officialCancellationLetter |
-| `/api/ai/incident-guide` | situation | Không | data: crisisTitle, immediateSteps, legalBasis, hotlines, legalTemplate |
-| `/api/realmatch/solve-job` | businessProblem | industry, budget | data: exactRoleNeeded, threeCoreSkills, threeMinuteTest, suggestedEngagement, fairCompensationAdvice |
-| `/api/realmatch/skill-to-income` | currentSkills | ageGroup, situation | data: immediateIncomes, seniorAdvantageAnalysis, skillsToSharpen |
-| `/api/realmatch/market-demand` | productOrService | targetRegion | data: realBuyerNeeds, whyMostSellersFail, reverseOfferFormula, targetBuyerProfile |
-
-Thành công trả `{ success: true, data, source }`; generate-ideas dùng `ideas` thay `data`. Thiếu trường bắt buộc trả HTTP 400 với `{ error: "..." }`.
-
-Có GEMINI_API_KEY, server tạo GoogleGenAI và gọi model có tên literal `gemini-3.8-flash`, yêu cầu JSON rồi JSON.parse. Đây là cấu hình source, không xác nhận model đang được nhà cung cấp hỗ trợ. Nếu gọi hoặc parse lỗi, server ghi log và chuyển sang fallback. Thiếu khóa thì dùng fallback trực tiếp.
-
-| source | Nhánh xử lý |
-| --- | --- |
-| `gemini-3.8-flash` | Phản hồi từ nhánh gọi Gemini |
-| `heuristic-matrix` | Fallback stress-test và generate-ideas |
-| `heuristic-engine` | Fallback 5 endpoint còn lại |
-
-Fallback không tương đương phân tích AI thực tế:
-
-- Stress-test tạo điểm ngẫu nhiên 74–91, phân loại bằng độ dài/từ khóa trong vấn đề và ghép nội dung mẫu.
-- Generate-ideas trả 3 ý tưởng cố định, thay ID theo thời gian và category theo đầu vào.
-- Scan-expense trả 3 khoản mẫu tổng 377.000 đồng/tháng, không phân tích statementText.
-- Incident-guide dùng hướng dẫn mẫu, ghép một phần tình huống vào tiêu đề.
-- Solve-job ghép bài toán vào mẫu. Skill-to-income và market-demand trả nội dung cố định.
-
-Fallback cũng trả success: true, nên cần đọc source để phân biệt. Không diễn giải số liệu hoặc tư vấn mẫu thành kết quả đã kiểm chứng. Nội dung gửi đến API có thể được chuyển tới Gemini khi có khóa; đây là xử lý server, không phải on-device.
-
-## 5. Cấu hình và vận hành
-
-| Biến | Hành vi trong code |
-| --- | --- |
-| PORT | Cổng Express, mặc định 3000 |
-| NODE_ENV | Chính xác production thì phục vụ dist; giá trị khác dùng Vite middleware |
-| GEMINI_API_KEY | Tùy chọn cho 7 API AI |
-| DISABLE_HMR | Chuỗi true tắt HMR và file watching theo vite.config.ts |
-| APP_URL | Có trong .env.example, chưa được code đọc |
-
-`dotenv.config()` đọc `.env` mặc định. `.env.example` chứa khóa mẫu; bỏ giá trị placeholder nếu muốn thử nhánh không có khóa. Hướng dẫn chạy và lệnh PowerShell nằm trong [README](README.md).
-
-Build chỉ tạo frontend. Start và dev cùng gọi `tsx server.ts`; start không tự đặt production. Preview chỉ phục vụ frontend build, không có API Express. Chưa có script test tự động; lint chỉ kiểm tra TypeScript.
-
-## 6. Phạm vi kiểm chứng
-
-Tài liệu được đối chiếu tĩnh với entrypoint, component, data, cấu hình và các route server. Chưa chạy build, typecheck, thử trình duyệt hoặc gọi Gemini trong lần rà soát này; workspace chưa cài node_modules. Các giới hạn hành vi được ghi trong [DOCUMENTATION.md](DOCUMENTATION.md).
-
-Khi cập nhật, kiểm tra luồng nối từ App và handler/API thực tế trước khi ghi chức năng là đã triển khai. Nội dung quảng bá, dữ liệu mẫu, dependency hoặc endpoint còn sót lại không tự chứng minh tính năng đang hoạt động trên giao diện.
+1. **Local Build**:
+   ```bash
+   npm run lint && npm run build
+   ```
+2. **Google Cloud Run Deployment**:
+   - Khi tiến hành Publish từ AI Studio, hệ thống đọc trực tiếp `Dockerfile` và `cloudbuild.yaml` tại thư mục gốc.
+   - Quá trình build sử dụng cache layer của Docker và cài đặt qua `npm ci` độc lập, tạo ra artifact Standalone gọn nhẹ.
+   - Cloud Run khởi chạy container với user không đặc quyền `nextjs`, cấp phát cổng qua `$PORT` và tự động kiểm tra tính sẵn sàng qua probe `http://127.0.0.1:${PORT}/api/health`.

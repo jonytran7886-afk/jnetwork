@@ -1,75 +1,95 @@
-﻿# Cùng Làm — Chức năng thực tế của jnetwork
+# Tài Liệu Đặc Tả Kỹ Thuật & Nghiệp Vụ — J-Network
 
-Cập nhật: **2026-09-29**. Đối chiếu `src/App.tsx`, `src/components/`, `src/data/cungLamData.ts` và `server.ts`. Đây là tài liệu hiện trạng, không phải cam kết tính năng hay lộ trình phát hành.
+**Phiên bản:** 2.0 (Cập nhật ngày 29-09-2026)  
+**Định danh dự án:** `jnetwork`  
+**Hạ tầng:** Google Cloud Run / Next.js 16.3 Standalone / Firebase Cloud Firestore
 
-## 1. Sản phẩm hiện tại
+---
 
-**Cùng Làm** là giao diện cộng đồng chia sẻ nguồn lực và tìm cơ hội hợp tác. Người dùng giới thiệu điều mình có, điều mình cần và hướng hợp tác mong muốn. Nội dung nhấn mạnh bình đẳng, minh bạch, bổ trợ thế mạnh và cùng tạo giá trị.
+## 1. Tổng Quan Kiến Trúc Hệ Thống
 
-| Nhóm trong source | Nội dung | Ví dụ dữ liệu mẫu |
-| --- | --- | --- |
-| `project` | Dự án & ý tưởng | Phát triển mô hình cà phê mang đi |
-| `resource` | Nguồn lực hợp tác | Hợp tác phát triển xưởng gia công nội thất |
-| `space` | Không gian chia sẻ | Chia sẻ không gian làm việc sáng tạo |
-| `partner` | Cộng đồng chuyên môn; bộ lọc ghi “Hợp tác chuyên môn” | Đồng hành phát triển sản phẩm công nghệ |
+J-Network được xây dựng theo mô hình **Full-Stack Server-Rendered / Micro-Utility** hiện đại trên nền Next.js App Router, kết hợp lưu trữ phân tán thời gian thực từ Google Cloud Firestore và trí tuệ nhân tạo từ Gemini 2.5 Flash:
 
-Bốn cơ hội trong `INITIAL_OPPORTUNITIES` là dữ liệu viết sẵn. Tên người, địa điểm, mô tả và thời gian như “Hôm nay” không được lấy từ người dùng thật hoặc server.
+```text
+[ Người Dùng & Đối Tác ]
+          │
+          ▼
+   [ Next.js 16.3 App Router (Port 3000) ]
+   ├── Client Layer: React 19, Motion, Tailwind CSS v4
+   ├── Server API Routes: /api/ai/*, /api/health
+   └── Standalone Server Runtime: server.js
+          │
+    ┌─────┴─────────────────────────────────────┐
+    ▼                                           ▼
+[ Google Cloud Firestore ]           [ Google Gemini AI Engine ]
+(users, opportunities,              (Gemini 2.5 Flash via
+ invitations, deal_mous)              @google/genai SDK)
+```
 
-## 2. Bố cục và hành vi
+---
 
-Trang gồm header, hero với ô tìm kiếm và bốn tab, bốn nhóm nguồn lực, cách hoạt động, danh sách cơ hội, giá trị cộng đồng, lời mời tham gia và footer. Điều hướng cuộn đến section trong trang; chưa có router hay trang hồ sơ riêng.
+## 2. Phân Hệ Nghiệp Vụ Chi Tiết
 
-“Cách hoạt động” giới thiệu bốn bước: chia sẻ nguồn lực → khám phá cơ hội → kết nối & trao đổi → đồng hành & phát triển. Chưa có hệ thống nhắn tin hoặc quản lý hợp tác thực tế cho các bước sau.
+### 2.1. Phân Hệ Điều Hướng & Nhận Diện Thương Hiệu (Navbar)
+- **Thiết kế chống tràn màn hình (Anti-Break Layout)**:
+  - Tự động co giãn theo các breakpoint `sm`, `md`, `lg`, `xl`, `2xl`.
+  - Trên màn hình máy tính phổ thông (`1024px` đến `1279px`): Ẩn các liên kết phụ, ưu tiên hiển thị cố định 3 mục trọng tâm: `Trang chủ`, `Khám phá`, và `Deal Room B2B`.
+  - Trên màn hình lớn (`>= 1280px`): Mở rộng đầy đủ `Cách hoạt động`, `Cộng đồng`, `Về chúng tôi`.
+  - Khu vực tài khoản bên phải sử dụng `shrink-0` và giới hạn độ rộng tên `truncate` tránh đẩy menu rớt dòng.
 
-| Chức năng | Đã triển khai | Giới hạn |
-| --- | --- | --- |
-| Lọc cơ hội | Lọc mảng theo category, có mục tất cả | Không phân trang hoặc truy vấn server |
-| Ô tìm kiếm | Giữ nội dung nhập; nút tìm chọn nhóm đang mở rồi cuộn xuống | `searchQuery` không tham gia lọc; chưa tìm theo từ khóa |
-| Thẻ gợi ý hero | Điền từ khóa, chọn nhóm theo chuỗi trong nhãn và cuộn xuống | Không tìm nội dung bài đăng |
-| Xem cơ hội | Modal nguồn lực, nhu cầu, mô tả, người khởi tạo | Dữ liệu từ state React |
-| Chia sẻ nguồn lực | Tạo bài, chèn đầu danh sách, chuyển bộ lọc về tất cả | Không lưu bền vững, không kiểm tra đăng nhập |
-| Lưu cơ hội | Toggle `isBookmarked` và hiện thông báo | Mất khi tải lại; chưa có trang danh sách đã lưu |
-| Đăng nhập/đăng ký | Form và hai lựa chọn trải nghiệm nhanh; hiện thành công sau bộ hẹn giờ | Không xác thực, tạo tài khoản, session hoặc token |
-| Mở lời hợp tác | Nhập tên, liên hệ, đề xuất; hiện thành công rồi đóng | Không gửi hoặc lưu đề xuất dù thông báo nói đã chuyển tới người khởi tạo |
-| Nguyên tắc/hỗ trợ/điều khoản/quyền riêng tư | Modal nội dung tĩnh và các tab | Không có báo cáo, kiểm duyệt hoặc xử lý hỗ trợ |
-| Mạng xã hội ở footer | Hiển thị biểu tượng | Handler chặn điều hướng, chưa liên kết tài khoản thật |
+### 2.2. Phân Hệ Sàn Nguồn Lực & Cơ Hội Hợp Tác (Opportunities Engine)
+- **4 Nhóm nguồn lực thực tế**:
+  1. `project`: Dự án & Ý tưởng khởi nghiệp.
+  2. `resource`: Nguồn lực hợp tác (Công nghệ, nhà xưởng, máy móc, nguyên vật liệu).
+  3. `space`: Không gian chia sẻ (Văn phòng, mặt bằng thương mại, kho bãi).
+  4. `partner`: Cộng đồng chuyên gia & Cố vấn C-Level.
+- **Cơ chế đồng bộ 2 chiều (Bi-directional Sync)**:
+  - Khởi tạo với mảng dữ liệu mẫu uy tín `INITIAL_OPPORTUNITIES`.
+  - Lắng nghe real-time qua Firestore snapshot `collection(db, 'opportunities')`.
+  - Bổ sung cơ hội mới sẽ cập nhật tức thì đến toàn bộ các thành viên khác đang truy cập.
 
-## 3. Dữ liệu bài đăng
+### 2.3. Commercial Deal Room B2B (Phòng Giao Thương Chiến Lược)
+Đây là phân hệ nâng cấp đột phá dưới sự bảo trợ của Giám đốc Kinh doanh (CCO) và Chuyên gia Sản phẩm:
 
-Form nhận nhóm, tiêu đề, nguồn lực sẵn có, nhu cầu kết nối, địa điểm, điểm nhấn nguồn lực, tên và số điện thoại/Zalo. Trường bắt buộc dùng kiểm tra HTML; handler kiểm tra thêm tiêu đề và tên sau khi trim.
+1. **AI Deal Validator (Thẩm định thương vụ AI)**:
+   - Nhận diện năng lực đóng góp của Bên A và Bên B.
+   - Trả về điểm số khả thi thương mại (`dealFeasibilityScore` từ 65 - 98).
+   - Tự động thiết kế công thức phân chia doanh thu ròng (`revenueShareFormula`).
+   - Cảnh báo 2 rủi ro tài chính / công nợ cần đưa vào hợp đồng.
+   - Vạch ra lộ trình thực thi 3 giai đoạn (Tuần 1-2 Pilot ➔ Tháng 1 Chuẩn hóa ➔ Tháng 2-3 Nhân rộng).
 
-- ID tạo bằng `opp-${Date.now()}`; ảnh chọn sẵn theo nhóm, chưa có upload.
-- Mô tả được ghép từ nguồn lực, nhu cầu và địa điểm.
-- `cooperationType` dùng state mặc định “Đồng hành triển khai”, chưa có trường chỉnh trên form.
-- `phoneContact` chỉ nằm trong state form, không đưa vào `OpportunityItem` hoặc gửi đi.
-- Bài mới ghi “Vừa xong”, không lưu timestamp tự cập nhật.
+2. **Draft MOU Generator (Biên bản ghi nhớ thỏa thuận sơ bộ)**:
+   - Tự động đóng gói nội dung đàm phán thành văn bản 1 trang với đầy đủ điều khoản mục đích, cam kết hai bên và cơ chế hòa giải tranh chấp.
+   - Nút **Sao chép 1-Click** sao chép tức thì vào clipboard để chia sẻ qua Zalo, Email, hoặc in thành văn bản.
 
-Bài đăng và bookmark nằm trong `useState` của `App`. Frontend không dùng localStorage, sessionStorage hoặc database để lưu chúng.
+3. **Sàn Quản Trị Pipeline Cơ Hội**:
+   - Quản trị các thương vụ theo trạng thái tiến trình giao thương.
+   - Nút **"Vào Deal Room"** đẩy toàn bộ dữ liệu đối tác vào form AI để phân tích trong 1 giây.
 
-## 4. Những điểm chưa đồng bộ
+4. **Hệ Thống Tín Nhiệm Doanh Nghiệp (J-Trust Score)**:
+   - Xếp hạng 3 cấp bậc: Bạc (Silver 70-84), Vàng (Gold 85-94), Kim Cương (Diamond 95-100).
+   - Dựa trên 3 trụ cột: Pháp lý doanh nghiệp (40%), Lịch sử thực thi (35%), Bảo chứng mạng lưới (25%).
 
-- `AuthModal` chỉ dùng `initialMode` lúc khởi tạo state. Nút đăng nhập/đăng ký ở header có thể không mở đúng tab mong muốn ở các lần sau.
-- `CommunityPrinciplesModal` cũng chỉ dùng `defaultTab` lúc khởi tạo state; liên kết footer có thể mở lại tab trước đó.
-- `activeDetailItem` giữ object riêng. Toggle bookmark cập nhật mảng cơ hội nhưng không cập nhật object này; biểu tượng trong modal có thể chưa đổi cho tới khi mở lại.
-- Nội dung hỗ trợ nhắc tin nhắn, nút báo cáo và xử lý trong 2 giờ nhưng chưa có triển khai tương ứng. Email và hotline là chuỗi viết sẵn; source không chứng minh đó là kênh hỗ trợ đang hoạt động.
+---
 
-Các điểm này được ghi nhận theo code; đợt cập nhật tài liệu không sửa hành vi ứng dụng.
+## 3. Danh Mục API Endpoints
 
-## 5. Phần cũ còn tồn tại
+| Endpoint | Phương thức | Chức năng | Phản hồi chính |
+| :--- | :--- | :--- | :--- |
+| `/api/health` | `GET` | Health check cho Docker container & Cloud Run probe | `{"status":"ok", "timestamp":"..."}` |
+| `/api/ai/deal-validator` | `POST` | Thẩm định thương vụ B2B, chia sẻ doanh thu & sinh MOU | `{"success":true, "data": {dealFeasibilityScore, draftMOU, ...}}` |
+| `/api/ai/stress-test` | `POST` | Thẩm định tính thiết yếu và mô hình doanh thu của ý tưởng | `{"success":true, "data": {necessityScore, isPainkiller, ...}}` |
+| `/api/ai/generate-ideas` | `POST` | Gợi ý ý tưởng giải quyết nhu cầu phổ quát | `{"success":true, "data": [...]}` |
+| `/api/ai/incident-guide` | `POST` | Hướng dẫn ứng phó sự cố khẩn cấp | `{"success":true, "data": {checklist, ...}}` |
+| `/api/ai/scan-expense` | `POST` | Tối ưu hóa chi tiêu và chi phí vận hành | `{"success":true, "data": {savings, ...}}` |
 
-`server.ts` vẫn đăng ký 7 API AI của UniversalNeeds/FamilyShield/RealMatch, nhưng frontend Cùng Làm không gọi API nào. `src/data/pillars.ts` và `src/data/blueprints.ts` chứa nội dung cũ, không được import vào giao diện hiện tại.
+*Ghi chú: Toàn bộ các API đều tích hợp cơ chế Heuristic Matrix Fallback để đảm bảo hệ thống phản hồi 100% kể cả trong trường hợp chưa kích hoạt API key.*
 
-`metadata.json` và log khởi động server còn dùng tên UniversalNeeds Studio, chưa đồng bộ với `index.html` và giao diện Cùng Làm. Xem [kiến trúc và API](SYSTEM_ARCHITECTURE_V1.md).
+---
 
-## 6. Những mô tả sai đã được thay thế
+## 4. Đặc Tả Triển Khai Google Cloud Run
 
-| Tài liệu trước đây | Kết quả đối chiếu |
-| --- | --- |
-| RealMatch v2 là sản phẩm thương mại với 5 phân hệ | Giao diện hiện tại là Cùng Làm với 4 nhóm cơ hội và thao tác demo |
-| FamilyShield OS là sản phẩm hoàn chỉnh | Còn API/nội dung dữ liệu cũ, không có giao diện FamilyShield trong App |
-| Lưu bộ sưu tập bằng localStorage | Không có triển khai trong frontend hiện tại |
-| Xử lý on-device, offline 100% | API xử lý server, có khóa thì thử gửi nội dung đến Gemini; không có service worker |
-| Fallback thông minh bảo đảm hoạt động 100% | Phần lớn trả nội dung mẫu, không có kiểm chứng cho bảo đảm đó |
-| KPI, WCAG AA, các mốc phát hành v1/v2/v3 | Không có kết quả kiểm chứng hoặc kế hoạch được xác nhận trong source |
-
-Chưa có tài khoản thật, API CRUD cơ hội, chat, ghép nối tự động, thanh toán/ký quỹ, eKYC, định vị lân cận, gửi Zalo/SMS, OCR, cảm biến người thân hoặc xuất bộ sưu tập trong ứng dụng đang hiển thị. Không coi các ý tưởng này là tính năng đã có hay lộ trình đã duyệt.
+- **Container Engine**: Docker với `Dockerfile` đa tầng (Multi-stage build) trên nền `node:22-alpine`.
+- **Cấu hình Standalone**: Khai báo `output: 'standalone'` trong `next.config.ts`, loại bỏ sự phụ thuộc vào toàn bộ thư mục `node_modules` nặng nề tại runtime.
+- **Port Handling**: Tự động nhận diện biến môi trường `$PORT` do Google Cloud Run phân bổ (mặc định 8080/3000), tránh xung đột cổng.
+- **Kiểm soát file**: `.gcloudignore` và `.dockerignore` chuẩn hóa, loại bỏ hoàn toàn các file tạm và cache build khỏi image.

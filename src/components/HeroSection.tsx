@@ -252,9 +252,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                 <div className="relative group">
                   <div className="h-44 sm:h-52 w-full rounded-3xl overflow-hidden shadow-md">
                     <img
-                      src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=700&q=80"
-                      alt="Thành viên Cùng Làm"
-                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                      src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
+                      alt="Khởi tạo ý tưởng và kết nối nguồn lực"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
 

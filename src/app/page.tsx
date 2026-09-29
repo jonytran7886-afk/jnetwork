@@ -18,6 +18,7 @@ import { PostDemandModal } from '../components/PostDemandModal';
 import { AuthModal } from '../components/AuthModal';
 import { CommunityPrinciplesModal } from '../components/CommunityPrinciplesModal';
 import { MemberHubModal } from '../components/MemberHubModal';
+import { CommercialDealRoom } from '../components/CommercialDealRoom';
 import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
 
 export default function HomePage() {
@@ -220,6 +221,7 @@ export default function HomePage() {
         }}
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onOpenMemberHub={(tab) => setMemberHubState({ isOpen: true, tab: tab || 'opportunities' })}
+        onOpenPostDemand={() => setIsPostDemandOpen(true)}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
           else scrollToSection(id);
@@ -262,7 +264,12 @@ export default function HomePage() {
           }}
         />
 
-        {/* 5. Câu chuyện thành công (Success Stories) */}
+        {/* 5. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
+        <section id="deal-room">
+          <CommercialDealRoom />
+        </section>
+
+        {/* 6. Câu chuyện thành công (Success Stories) */}
         <SuccessStoriesSection
           onViewAll={() => {
             scrollToSection('community-values');

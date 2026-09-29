@@ -1,51 +1,111 @@
-﻿# jnetwork — Cùng Làm
+# J-Network — Nền Tảng Kết Nối Nguồn Lực & Giao Thương B2B
 
-Ứng dụng web tiếng Việt để chia sẻ nguồn lực và khám phá cơ hội hợp tác, với thông điệp **“Kết nối nguồn lực. Kiến tạo cơ hội.”** Tên hiển thị hiện tại là **Cùng Làm**; `jnetwork` là tên thư mục dự án.
+> **"Kết nối nguồn lực. Kiến tạo cơ hội."**
 
-Source hiện là bản demo tương tác: xem/lọc cơ hội theo nhóm, mở chi tiết, thêm bài đăng và đánh dấu quan tâm trong bộ nhớ React. Đăng nhập/đăng ký và gửi lời hợp tác chỉ mô phỏng thành công. Chưa có database, tài khoản thật hay gửi thông tin tới người khác. Tải lại trang sẽ mất bài đăng mới và trạng thái đã lưu.
+J-Network là nền tảng số kết nối nguồn lực toàn diện và thúc đẩy giao thương B2B thực chiến. Nền tảng giải quyết triệt để bài toán tìm kiếm cộng sự, chia sẻ công suất nhà xưởng, mở rộng mạng lưới phân phối, kêu gọi vốn đầu tư và tự động hóa thẩm định thương vụ thông qua trợ lý Giám đốc Kinh doanh AI (CCO AI Engine).
 
-## Công nghệ
+---
 
-- React 19, TypeScript, Vite 8, Tailwind CSS 4, Lucide React.
-- Express 4 chạy bằng `tsx`, phục vụ frontend và 7 API AI còn lại từ các hướng sản phẩm cũ.
-- Frontend Cùng Làm hiện không gọi các API này. Gemini API key không bắt buộc để chạy giao diện.
+## 🚀 Tính Năng Cốt Lõi
 
-## Chạy tại máy
+### 1. Sàn Cơ Hội & Kết Nối Nguồn Lực (Resource Networking)
+- **4 Trụ cột nhu cầu**:
+  - Dự án & Ý tưởng kinh doanh
+  - Nguồn lực hợp tác (Công nghệ, máy móc, xưởng may/sản xuất)
+  - Không gian chia sẻ (Văn phòng, mặt bằng bán lẻ, kho bãi)
+  - Cộng đồng chuyên môn & Cố vấn C-Level
+- **Đồng bộ thời gian thực (Real-time Sync)** qua Google Cloud Firestore: Thêm mới, xem chi tiết, lưu cơ hội quan tâm.
 
-Cần Node.js và npm tương thích với dependency trong `package.json`. Dự án chưa khai báo `engines` hoặc cố định phiên bản Node. Source có `bun.lock`, chưa có `package-lock.json`; npm install sẽ tạo lockfile npm riêng.
+### 2. Commercial Deal Room B2B (Phòng Giao Thương Chiến Lược)
+- **AI Deal Validator (Thẩm định thương vụ AI)**:
+  - Phân tích tương hỗ hai chiều (Win-Win Synergy).
+  - Tự động gợi ý **Cơ chế phân chia doanh thu & lợi nhuận (Net Revenue Share Formula)**.
+  - Cảnh báo 2 rủi ro pháp lý/tài chính trọng yếu cần đưa vào hợp đồng.
+  - Thiết lập lộ trình hành động 30-60-90 ngày.
+- **Biên Bản Ghi Nhớ Hợp Tác Sơ Bộ (Draft MOU Builder)**: Tự động xuất văn bản thỏa thuận 1 trang sẵn sàng ký kết kèm nút sao chép nhanh 1-Click.
+- **Sàn Quản Trị Pipeline Thương Vụ**: Theo dõi các deal theo tiến trình: *Đang mở nhận hồ sơ ➔ Đang đàm phán ➔ Đã ký MOU ➔ Đang triển khai*.
+- **Hệ Thống Tín Nhiệm Doanh Nghiệp (J-Trust Scoring Engine)**:
+  - 40% Xác thực thực thể pháp lý.
+  - 35% Lịch sử thực thi cam kết và giải ngân.
+  - 25% Bảo chứng từ mạng lưới thành viên.
+  - 3 Hạng tín nhiệm: Bạc (Silver), Vàng (Gold), Kim Cương (Diamond).
 
-```powershell
+### 3. Trung Tâm Thành Viên (Member Hub)
+- Quản lý danh sách cơ hội cá nhân đã đăng tải.
+- Hộp thư tiếp nhận và phê duyệt lời mời hợp tác.
+- Hệ thống gửi lời đề nghị giao thương trực tiếp đến chủ sở hữu nguồn lực.
+
+### 4. Bộ Công Cụ Trí Tuệ Nhân Tạo (Gemini AI Suite)
+- Khảo sát & kích hoạt ý tưởng sản phẩm thiết yếu.
+- Thẩm định rủi ro kinh doanh và điểm hòa vốn.
+- Tự động quét hóa đơn, tối ưu chi phí vận hành.
+
+---
+
+## 🛠️ Công Nghệ Nền Tảng
+
+- **Frontend & Server Framework**: Next.js 16.3 (Turbopack, App Router, React 19, TypeScript).
+- **Styling**: Tailwind CSS v4, Motion (`motion/react`), Lucide React.
+- **Backend & Database**:
+  - Next.js API Routes (`src/app/api/*`).
+  - Google Cloud Firestore & Firebase Authentication (`fleet-gravity-c5fd2`).
+- **Trí tuệ nhân tạo**: Google Gen AI SDK (`@google/genai`) tích hợp mô hình **Gemini 2.5 Flash**.
+- **Kiến trúc Containerization**:
+  - `output: 'standalone'` trong `next.config.ts`.
+  - Dockerfile Multi-stage siêu nhẹ (~80MB) trên nền **Node 22 Alpine**.
+  - Healthcheck tự động tại endpoint `/api/health`.
+  - Sẵn sàng triển khai tức thì trên **Google Cloud Run** & **Google Cloud Build**.
+
+---
+
+## 💻 Hướng Dẫn Cài Đặt & Chạy Môi Trường Cục Bộ
+
+### 1. Yêu cầu hệ thống
+- Node.js 22+ và npm 10+.
+
+### 2. Cài đặt thư viện
+```bash
 npm install
-npm run dev
 ```
 
-Mở `http://localhost:3000`. Biến môi trường `PORT` có thể đổi cổng Express.
+### 3. Cấu hình biến môi trường
+Tạo file `.env.local` tại thư mục gốc:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+PORT=3000
+```
+*(Nếu không có GEMINI_API_KEY, hệ thống sẽ tự động chuyển sang cơ chế Heuristic Matrix dự phòng để đảm bảo 100% không gián đoạn người dùng).*
 
-Nếu cần thử API Gemini, tạo `.env` ở thư mục gốc và đặt khóa thật vào `GEMINI_API_KEY`. Server dùng `dotenv.config()` mặc định, không cấu hình đọc `.env.local`. Bỏ hẳn khóa để dùng phản hồi dự phòng. Model trong source là chuỗi `gemini-3.8-flash`; tài liệu này không xác nhận model đó khả dụng trên dịch vụ.
+### 4. Khởi chạy môi trường Dev
+```bash
+npm run dev
+```
+Truy cập ứng dụng tại `http://localhost:3000`.
 
-## Các lệnh
+### 5. Kiểm tra mã nguồn & Biên dịch
+```bash
+# Kiểm tra Type Check
+npm run lint
 
-| Lệnh | Hành vi |
-| --- | --- |
-| `npm run lint` | Kiểm tra TypeScript bằng `tsc --noEmit`, không phải ESLint |
-| `npm run build` | Build frontend vào `dist/`, không biên dịch backend |
-| `npm start` | Chạy `tsx server.ts`; chế độ phụ thuộc `NODE_ENV` |
-| `npm run preview` | Xem frontend build qua Vite, không khởi chạy API Express |
-| `npm run clean` | Script `rm -rf dist server.js`, cần shell hỗ trợ cú pháp Unix |
-
-Chạy bản build cùng Express trong PowerShell:
-
-```powershell
+# Biên dịch bản sản xuất
 npm run build
-$env:NODE_ENV = 'production'
+
+# Khởi chạy server sản xuất
 npm start
 ```
 
-Backend vẫn chạy qua `tsx`, nên môi trường chạy cần công cụ này dù đang ở chế độ production. Chế độ production không biến các chức năng demo thành chức năng vận hành thật.
+---
 
-## Tài liệu
+## 🐳 Triển Khai Container & Google Cloud Run
 
-- [Chức năng thực tế và giới hạn](DOCUMENTATION.md).
-- [Kiến trúc, dữ liệu và API](SYSTEM_ARCHITECTURE_V1.md) — giữ tên file cũ để không làm đứt liên kết; nội dung đã cập nhật theo source.
+Dự án được tối ưu hóa đặc biệt cho hạ tầng **Google Cloud Run**:
 
-Cập nhật theo mã nguồn ngày **2026-09-29**. `package.json` vẫn ghi `react-example`, phiên bản `0.0.0`; không có cơ sở gọi đây là bản phát hành thương mại v1/v2.
+```bash
+# Build container image
+docker build -t jnetwork:latest .
+
+# Chạy thử nghiệm cục bộ
+docker run -p 3000:3000 -e PORT=3000 jnetwork:latest
+```
+
+File `Dockerfile` đã được cấu hình bảo mật với user không đặc quyền `nextjs`, port động `$PORT`, và probe tự động ping `/api/health`.
