@@ -2,15 +2,19 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://jnetwork.ai.studio'),
   title: 'Cùng Làm — Kết nối nguồn lực. Kiến tạo cơ hội.',
   description: 'Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và thúc đẩy các hoạt động hợp tác thực tế.',
   openGraph: {
     title: 'Cùng Làm — Kết nối nguồn lực. Kiến tạo cơ hội.',
     description: 'Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và thúc đẩy các hoạt động hợp tác thực tế.',
+    url: 'https://jnetwork.ai.studio',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
+    title: 'Cùng Làm — Kết nối nguồn lực. Kiến tạo cơ hội.',
+    description: 'Mạng xã hội kết nối nguồn lực, chia sẻ cơ hội và thúc đẩy các hoạt động hợp tác thực tế.',
   },
 };
 

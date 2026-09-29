@@ -6,6 +6,7 @@ import { HeroSection } from '../components/HeroSection';
 import { PillarsSection } from '../components/PillarsSection';
 import { HowItWorksSection } from '../components/HowItWorksSection';
 import { OpportunitiesSection } from '../components/OpportunitiesSection';
+import { SuccessStoriesSection } from '../components/SuccessStoriesSection';
 import { CommunityValuesSection } from '../components/CommunityValuesSection';
 import { CtaSection } from '../components/CtaSection';
 import { Footer } from '../components/Footer';
@@ -22,6 +23,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Modals state
+  const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
   const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
   const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
@@ -124,6 +126,11 @@ export default function HomePage() {
       
       {/* Header */}
       <Navbar
+        userName={loggedInUser}
+        onLogout={() => {
+          setLoggedInUser(null);
+          showToast('Bạn đã đăng xuất tài khoản.');
+        }}
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
@@ -167,7 +174,14 @@ export default function HomePage() {
           }}
         />
 
-        {/* 5. Giá trị cộng đồng (Community Values) */}
+        {/* 5. Câu chuyện thành công (Success Stories) */}
+        <SuccessStoriesSection
+          onViewAll={() => {
+            scrollToSection('community-values');
+          }}
+        />
+
+        {/* 6. Giá trị cộng đồng (Community Values) */}
         <CommunityValuesSection />
 
         {/* 6. CTA Banner */}
@@ -211,7 +225,10 @@ export default function HomePage() {
         isOpen={authModalState.isOpen}
         initialMode={authModalState.mode}
         onClose={() => setAuthModalState({ ...authModalState, isOpen: false })}
-        onSuccess={(name) => showToast(`Chào mừng ${name} đến với Cùng Làm!`)}
+        onSuccess={(name) => {
+          setLoggedInUser(name);
+          showToast(`Chào mừng ${name} đến với Cùng Làm!`);
+        }}
       />
 
       {/* 4. Community Principles & Support Modal */}

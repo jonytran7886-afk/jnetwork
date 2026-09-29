@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "User": {
+      "collection": "users",
+      "fields": {
+        "id": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Tên người dùng" },
+        "email": { "type": "string", "description": "Email người dùng" },
+        "photoURL": { "type": "string", "description": "Ảnh đại diện" },
+        "phoneNumber": { "type": "string", "description": "Số điện thoại liên hệ" },
+        "bio": { "type": "string", "description": "Giới thiệu ngắn" },
+        "role": { "type": "string", "description": "Vai trò (vd: user, partner, mentor)" },
+        "createdAt": { "type": "string", "description": "Thời gian tạo" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.auth != null && request.auth.uid == request.resource.data.id",
+        "update": "request.auth != null && request.auth.uid == resource.data.id",
+        "delete": "false"
+      }
+    },
+    "Opportunity": {
+      "collection": "opportunities",
+      "fields": {
+        "id": { "type": "string", "description": "ID cơ hội" },
+        "ownerId": { "type": "string", "description": "UID của người tạo cơ hội" },
+        "ownerName": { "type": "string", "description": "Tên người tạo" },
+        "ownerAvatar": { "type": "string", "description": "Ảnh đại diện người tạo" },
+        "title": { "type": "string", "description": "Tiêu đề cơ hội / nhu cầu" },
+        "category": { "type": "string", "description": "Danh mục (project, resource, space, partner)" },
+        "description": { "type": "string", "description": "Mô tả chi tiết" },
+        "location": { "type": "string", "description": "Địa điểm / Khu vực" },
+        "scale": { "type": "string", "description": "Quy mô nhân sự / đối tác" },
+        "reward": { "type": "string", "description": "Ngân sách / Chia sẻ quyền lợi" },
+        "status": { "type": "string", "description": "Trạng thái (active, closed, paused)" },
+        "createdAt": { "type": "string", "description": "Thời gian đăng" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "true",
+        "create": "request.auth != null && request.resource.data.ownerId == request.auth.uid",
+        "update": "request.auth != null && resource.data.ownerId == request.auth.uid",
+        "delete": "request.auth != null && resource.data.ownerId == request.auth.uid"
+      }
+    },
+    "Invitation": {
+      "collection": "invitations",
+      "fields": {
+        "id": { "type": "string", "description": "ID lời mời kết nối" },
+        "senderId": { "type": "string", "description": "UID người gửi lời mời" },
+        "senderName": { "type": "string", "description": "Tên người gửi" },
+        "receiverId": { "type": "string", "description": "UID người nhận lời mời" },
+        "opportunityId": { "type": "string", "description": "ID cơ hội liên kết" },
+        "opportunityTitle": { "type": "string", "description": "Tiêu đề cơ hội" },
+        "message": { "type": "string", "description": "Tin nhắn kèm theo" },
+        "status": { "type": "string", "description": "Trạng thái (pending, accepted, rejected)" },
+        "createdAt": { "type": "string", "description": "Thời gian tạo" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId)",
+        "create": "request.auth != null && request.resource.data.senderId == request.auth.uid",
+        "update": "request.auth != null && (request.auth.uid == resource.data.receiverId || request.auth.uid == resource.data.senderId)",
+        "delete": "request.auth != null && request.auth.uid == resource.data.senderId"
+      }
+    },
+    "Conversation": {
+      "collection": "conversations",
+      "fields": {
+        "id": { "type": "string", "description": "ID cuộc hội thoại" },
+        "participantIds": { "type": "array", "description": "Danh sách UID thành viên tham gia" },
+        "participantNames": { "type": "map", "description": "Tên các thành viên" },
+        "lastMessage": { "type": "string", "description": "Nội dung tin nhắn cuối" },
+        "lastMessageSenderId": { "type": "string", "description": "UID người gửi cuối" },
+        "lastMessageAt": { "type": "string", "description": "Thời gian tin nhắn cuối" },
+        "createdAt": { "type": "string", "description": "Thời gian tạo cuộc trò chuyện" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "request.auth != null && request.auth.uid in resource.data.participantIds",
+        "create": "request.auth != null && request.auth.uid in request.resource.data.participantIds",
+        "update": "request.auth != null && request.auth.uid in resource.data.participantIds",
+        "delete": "false"
+      },
+      "subcollections": {
+        "messages": {
+          "fields": {
+            "id": { "type": "string", "description": "ID tin nhắn" },
+            "senderId": { "type": "string", "description": "UID người gửi" },
+            "senderName": { "type": "string", "description": "Tên người gửi" },
+            "content": { "type": "string", "description": "Nội dung tin nhắn" },
+            "timestamp": { "type": "string", "description": "Thời gian gửi" }
+          },
+          "rules": {
+            "read": "request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds",
+            "create": "request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds && request.resource.data.senderId == request.auth.uid",
+            "update": "false",
+            "delete": "request.auth != null && request.auth.uid == resource.data.senderId"
+          }
+        }
+      }
+    }
+  }
+}

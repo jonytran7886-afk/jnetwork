@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================
+    // Helper Functions
+    // =========================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // =========================================================
+    // 1. Users Collection
+    // =========================================================
+    match /users/{userId} {
+      // Anyone can view user profile
+      allow read: if true;
+      // Only the authenticated user can create or update their own record
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // =========================================================
+    // 2. Opportunities Collection
+    // =========================================================
+    match /opportunities/{opportunityId} {
+      // Public read for exploring opportunities
+      allow read: if true;
+      // Authenticated users can create, must set ownerId to themselves
+      allow create: if isAuthenticated() && request.resource.data.ownerId == request.auth.uid;
+      // Only the owner can edit or delete their opportunity
+      allow update: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    // =========================================================
+    // 3. Invitations Collection
+    // =========================================================
+    match /invitations/{invitationId} {
+      // Only sender or receiver can view the invitation
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.senderId || 
+        request.auth.uid == resource.data.receiverId
+      );
+      // Authenticated user can send an invitation as senderId
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      // Receiver can update status (accept/reject), sender can update message
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.receiverId || 
+        request.auth.uid == resource.data.senderId
+      );
+      // Sender can delete/revoke invitation
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.senderId;
+    }
+
+    // =========================================================
+    // 4. Conversations Collection & Messages Subcollection
+    // =========================================================
+    match /conversations/{conversationId} {
+      // Only participants in the conversation can read
+      allow read: if isAuthenticated() && request.auth.uid in resource.data.participantIds;
+      // Participants can initiate a conversation
+      allow create: if isAuthenticated() && request.auth.uid in request.resource.data.participantIds;
+      // Participants can update metadata (e.g. lastMessage)
+      allow update: if isAuthenticated() && request.auth.uid in resource.data.participantIds;
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Only participants in parent conversation can read messages
+        allow read: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds;
+        // Only participants can send a message
+        allow create: if isAuthenticated() && 
+          request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds &&
+          request.resource.data.senderId == request.auth.uid;
+        allow update: if false;
+        allow delete: if isAuthenticated() && request.auth.uid == resource.data.senderId;
+      }
+    }
+
+  }
+}

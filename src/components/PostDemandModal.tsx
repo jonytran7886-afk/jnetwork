@@ -9,6 +9,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { OpportunityItem } from '../data/opportunitiesData';
+import { auth } from '../lib/firebase';
+import { createOpportunity } from '../lib/firestoreService';
 
 interface PostDemandModalProps {
   isOpen: boolean;
@@ -69,6 +71,22 @@ export const PostDemandModal: React.FC<PostDemandModalProps> = ({
       createdTime: 'Vừa xong',
       isBookmarked: false,
     };
+
+    // If user is logged into Firebase, save directly to Firestore
+    if (auth.currentUser) {
+      createOpportunity({
+        ownerId: auth.currentUser.uid,
+        ownerName: contactName.trim() || auth.currentUser.displayName || 'Thành viên Cùng Làm',
+        ownerAvatar: auth.currentUser.photoURL || '',
+        title: title.trim(),
+        category,
+        description: newItem.detailedDescription,
+        location: location.trim(),
+        scale: cooperationType.trim(),
+        reward: resourceHighlight.trim(),
+        status: 'active',
+      }).catch((err) => console.warn('Lưu Firestore phụ:', err));
+    }
 
     onAddOpportunity(newItem);
     setIsSuccess(true);
