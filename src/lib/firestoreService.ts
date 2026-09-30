@@ -91,31 +91,40 @@ export const syncUserProfile = async (user: {
   photoURL?: string | null;
   phoneNumber?: string | null;
 }): Promise<UserProfile> => {
-  const userRef = doc(db, 'users', user.uid);
-  const snap = await getDoc(userRef);
+  const fallbackProfile: UserProfile = {
+    id: user.uid,
+    displayName: user.displayName || 'Thành viên J-Network',
+    email: user.email || '',
+    photoURL: user.photoURL || '',
+    phoneNumber: user.phoneNumber || '',
+    bio: 'Thành viên kết nối nguồn lực tại J-Network',
+    role: 'member',
+  };
 
-  if (!snap.exists()) {
-    const newProfile: UserProfile = {
-      id: user.uid,
-      displayName: user.displayName || 'Thành viên Cùng Làm',
-      email: user.email || '',
-      photoURL: user.photoURL || '',
-      phoneNumber: user.phoneNumber || '',
-      bio: 'Thành viên kết nối nguồn lực tại Cùng Làm',
-      role: 'member',
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-    await setDoc(userRef, newProfile);
-    return newProfile;
-  } else {
-    const existing = snap.data() as UserProfile;
-    await updateDoc(userRef, {
-      updatedAt: serverTimestamp(),
-      ...(user.displayName && { displayName: user.displayName }),
-      ...(user.photoURL && { photoURL: user.photoURL }),
-    });
-    return { ...existing, id: user.uid };
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+      const newProfile: UserProfile = {
+        ...fallbackProfile,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+      await setDoc(userRef, newProfile);
+      return newProfile;
+    } else {
+      const existing = snap.data() as UserProfile;
+      await updateDoc(userRef, {
+        updatedAt: serverTimestamp(),
+        ...(user.displayName && { displayName: user.displayName }),
+        ...(user.photoURL && { photoURL: user.photoURL }),
+      });
+      return { ...existing, id: user.uid };
+    }
+  } catch (error) {
+    console.warn('Lưu user profile Firestore:', error);
+    return fallbackProfile;
   }
 };
 

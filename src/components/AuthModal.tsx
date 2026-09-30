@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { X, CheckCircle2, ArrowRight } from 'lucide-react';
 import { signInWithGoogle } from '../lib/firebase';
@@ -26,6 +28,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Google Authentication
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setErrorMessage(null);
@@ -37,7 +40,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         return;
       }
 
-      // Sync user profile to Firestore `users` collection
       await syncUserProfile({
         uid: user.uid,
         displayName: user.displayName,
@@ -60,6 +62,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  // Standard Form Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSuccess(true);
@@ -70,18 +73,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 1500);
   };
 
-  const handleQuickDemo = (demoName: string) => {
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onSuccess(demoName);
-      onClose();
-    }, 1200);
-  };
-
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-5 my-8 animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 p-6 sm:p-8 space-y-5 my-8 animate-in fade-in zoom-in-95 duration-200 relative">
         
         {/* Top Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
@@ -93,7 +87,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <circle cx="18" cy="17" r="3.5" fill="white" />
             </svg>
             <span className="text-lg font-black text-slate-900">
-              {mode === 'login' ? 'Đăng nhập vào Cùng Làm' : 'Tham gia cộng đồng Cùng Làm'}
+              {mode === 'login' ? 'Đăng nhập vào J-Network' : 'Tham gia cộng đồng J-Network'}
             </span>
           </div>
           <button
@@ -224,38 +218,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <button
                 type="submit"
-                className="w-full py-3 bg-[#FF2D55] hover:bg-[#E01E45] text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                className="w-full py-3 bg-[#FF2D55] hover:bg-[#E01E45] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs cursor-pointer active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>{mode === 'login' ? 'Đăng nhập ngay' : 'Tham gia cộng đồng ngay'}</span>
+                <span>{mode === 'login' ? 'Đăng nhập ngay' : 'Đăng ký tài khoản'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              {/* Quick Demo Login shortcuts */}
-              <div className="pt-3 border-t border-slate-100 space-y-2">
-                <span className="text-[11px] text-slate-400 block text-center">
-                  Trải nghiệm nhanh với tư cách thành viên:
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('Minh (Người khởi tạo)')}
-                    className="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 cursor-pointer"
-                  >
-                    Minh (Khởi tạo)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleQuickDemo('Hà (Thành viên chia sẻ)')}
-                    className="flex-1 py-1.5 px-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium border border-slate-200 cursor-pointer"
-                  >
-                    Hà (Không gian)
-                  </button>
-                </div>
-              </div>
             </form>
           </div>
         )}
-
       </div>
     </div>
   );

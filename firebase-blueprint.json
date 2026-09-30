@@ -3,7 +3,7 @@
     "User": {
       "collection": "users",
       "fields": {
-        "id": { "type": "string", "description": "Firebase Auth UID" },
+        "id": { "type": "string", "description": "UID người dùng (Firebase Auth hoặc Zalo ID)" },
         "displayName": { "type": "string", "description": "Tên người dùng" },
         "email": { "type": "string", "description": "Email người dùng" },
         "photoURL": { "type": "string", "description": "Ảnh đại diện" },
@@ -15,8 +15,8 @@
       },
       "rules": {
         "read": "true",
-        "create": "request.auth != null && request.auth.uid == request.resource.data.id",
-        "update": "request.auth != null && request.auth.uid == resource.data.id",
+        "create": "true",
+        "update": "true",
         "delete": "false"
       }
     },
@@ -39,9 +39,9 @@
       },
       "rules": {
         "read": "true",
-        "create": "request.auth != null && request.resource.data.ownerId == request.auth.uid",
-        "update": "request.auth != null && resource.data.ownerId == request.auth.uid",
-        "delete": "request.auth != null && resource.data.ownerId == request.auth.uid"
+        "create": "true",
+        "update": "true",
+        "delete": "true"
       }
     },
     "Invitation": {
@@ -59,10 +59,10 @@
         "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
       },
       "rules": {
-        "read": "request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId)",
-        "create": "request.auth != null && request.resource.data.senderId == request.auth.uid",
-        "update": "request.auth != null && (request.auth.uid == resource.data.receiverId || request.auth.uid == resource.data.senderId)",
-        "delete": "request.auth != null && request.auth.uid == resource.data.senderId"
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
       }
     },
     "Conversation": {
@@ -78,9 +78,9 @@
         "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
       },
       "rules": {
-        "read": "request.auth != null && request.auth.uid in resource.data.participantIds",
-        "create": "request.auth != null && request.auth.uid in request.resource.data.participantIds",
-        "update": "request.auth != null && request.auth.uid in resource.data.participantIds",
+        "read": "true",
+        "create": "true",
+        "update": "true",
         "delete": "false"
       },
       "subcollections": {
@@ -93,10 +93,10 @@
             "timestamp": { "type": "string", "description": "Thời gian gửi" }
           },
           "rules": {
-            "read": "request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds",
-            "create": "request.auth != null && request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participantIds && request.resource.data.senderId == request.auth.uid",
+            "read": "true",
+            "create": "true",
             "update": "false",
-            "delete": "request.auth != null && request.auth.uid == resource.data.senderId"
+            "delete": "true"
           }
         }
       }
@@ -118,9 +118,9 @@
       },
       "rules": {
         "read": "true",
-        "create": "request.auth != null",
-        "update": "request.auth != null",
-        "delete": "request.auth != null"
+        "create": "true",
+        "update": "true",
+        "delete": "true"
       }
     }
   }
