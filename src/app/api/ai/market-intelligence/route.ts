@@ -63,6 +63,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa
     "targetGoal": string
   },
   "source": string (Tổ chức/Nguồn uy tín tham chiếu),
+  "sourceUrl": string (URL trang báo hoặc cổng thông tin uy tín, ví dụ: https://baochinhphu.vn, https://vcci.com.vn, https://sbv.gov.vn, https://moit.gov.vn...),
   "readTime": "3 phút đọc",
   "imageUrl": string (URL Unsplash chất lượng cao phù hợp)
 }
@@ -83,6 +84,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa
         const newInsight = {
           id: `ai-insight-${Date.now()}`,
           ...parsed,
+          sourceUrl: parsed.sourceUrl || 'https://baochinhphu.vn',
           publishedAt: 'Vừa xong (AI Real-time Intelligence)',
           isTrending: true,
           viewsCount: 1,
@@ -115,6 +117,7 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa
         targetGoal: 'Tiết kiệm 30% chi phí tiếp thị và gia tăng 50% doanh số trong 60 ngày.'
       },
       source: 'Hội đồng Cố vấn Doanh nghiệp J-Network',
+      sourceUrl: 'https://vcci.com.vn',
       publishedAt: 'Hôm nay, vừa cập nhật',
       readTime: '3 phút đọc',
       imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',

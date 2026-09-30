@@ -47,6 +47,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
       targetGoal: 'Tiếp cận gói vay vốn sản xuất 2 tỷ đồng với lãi suất ưu đãi 5.5%/năm.'
     },
     source: 'Tạp chí Tài chính & Ngân hàng Nhà nước',
+    sourceUrl: 'https://sbv.gov.vn',
     publishedAt: 'Hôm nay, 08:30',
     readTime: '3 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
@@ -69,6 +70,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
     suggestedActionType: 'post_resource',
     suggestedActionLabel: 'Đăng Tải Nguồn Lực Nhà Xưởng Nhàn Rỗi',
     source: 'Hiệp hội Doanh nghiệp TP.HCM (HUBA)',
+    sourceUrl: 'https://huba.vn',
     publishedAt: 'Hôm qua, 14:15',
     readTime: '4 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
@@ -97,6 +99,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
       targetGoal: 'Tiết kiệm 40% chi phí kho vận hàng tháng và tối ưu tốc độ giao hàng 2h.'
     },
     source: 'Cục Thương mại Điện tử và Kinh tế số',
+    sourceUrl: 'https://idea.gov.vn',
     publishedAt: '28-09-2026',
     readTime: '3 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80',
@@ -119,6 +122,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
     suggestedActionType: 'explore_opportunities',
     suggestedActionLabel: 'Xem Các Không Gian Đang Tìm Đối Tác Chia Sẻ',
     source: 'Cộng đồng Doanh chủ F&B Việt Nam',
+    sourceUrl: 'https://fnbvietnam.vn',
     publishedAt: '27-09-2026',
     readTime: '5 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
@@ -141,6 +145,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
     suggestedActionType: 'deal_room',
     suggestedActionLabel: 'Mở Phòng Thẩm Định Thương Vụ AI',
     source: 'Báo Diễn Đàn Doanh Nghiệp & VCCI',
+    sourceUrl: 'https://diendandoanhnghiep.vn',
     publishedAt: '26-09-2026',
     readTime: '3 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80',
@@ -169,6 +174,7 @@ export const INITIAL_INDUSTRY_INSIGHTS: IndustryInsightItem[] = [
       targetGoal: 'Xuất khẩu lô hàng thử nghiệm 5 tấn trái cây sấy sang thị trường Trung Đông trong quý tới.'
     },
     source: 'Bộ Công Thương & Cục Xúc tiến Thương mại',
+    sourceUrl: 'https://vietrade.gov.vn',
     publishedAt: '25-09-2026',
     readTime: '4 phút đọc',
     imageUrl: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=800&q=80',

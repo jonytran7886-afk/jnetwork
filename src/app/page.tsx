@@ -206,6 +206,16 @@ export default function HomePage() {
     );
   };
 
+  // Handler strictly enforcing mandatory authentication before opening PostDemand modal
+  const handleOpenPostDemandSafe = () => {
+    if (!firebaseUser && !loggedInUser) {
+      showToast('Vui lòng đăng nhập tài khoản để chia sẻ cơ hội & đăng nguồn lực.');
+      setAuthModalState({ isOpen: true, mode: 'login' });
+      return;
+    }
+    setIsPostDemandOpen(true);
+  };
+
   // Add new opportunity
   const handleAddOpportunity = (newItem: OpportunityItem) => {
     setOpportunities([newItem, ...opportunities]);
@@ -237,7 +247,7 @@ export default function HomePage() {
         }}
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onOpenMemberHub={(tab) => setMemberHubState({ isOpen: true, tab: tab || 'opportunities' })}
-        onOpenPostDemand={() => setIsPostDemandOpen(true)}
+        onOpenPostDemand={handleOpenPostDemandSafe}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
           else if (id === 'legal') setIsLegalModalOpen(true);
@@ -271,22 +281,36 @@ export default function HomePage() {
           onSearchSubmit={handleSearchSubmit}
           onTagClick={handleTagClick}
           onSelectCard={handleSelectHeroCard}
-          onOpenPostDemand={() => setIsPostDemandOpen(true)}
+          onOpenPostDemand={handleOpenPostDemandSafe}
           onScrollToMatchmaker={() => scrollToSection('matchmaker')}
           onScrollToRoles={() => scrollToSection('role-paths')}
           onOpenLegalTemplates={() => setIsLegalModalOpen(true)}
         />
 
-        {/* 2. Interactive Matchmaker 60s (Tôi Có Gì - Tôi Cần Gì) */}
+        {/* 2. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
+        <IndustryInsightsSection
+          onOpenDealRoomWithPrompt={(prompt) => {
+            setDealRoomPrompt(prompt);
+            scrollToSection('deal-room');
+            showToast('Đã nạp dữ liệu thương vụ vào Phòng Giao Thương!');
+          }}
+          onOpenPostDemand={handleOpenPostDemandSafe}
+          onExploreOpportunities={(cat) => {
+            if (cat) setSelectedOpportunityCategory(cat);
+            scrollToSection('opportunities');
+          }}
+        />
+
+        {/* 3. Interactive Matchmaker 60s (Tôi Có Gì - Tôi Cần Gì) */}
         <section id="matchmaker" className="py-8 sm:py-10 max-w-7xl mx-auto px-4 sm:px-6">
           <InteractiveResourceMatchmaker
             opportunities={opportunities}
             onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
-            onPostDemand={() => setIsPostDemandOpen(true)}
+            onPostDemand={handleOpenPostDemandSafe}
           />
         </section>
 
-        {/* 3. 4 Lối Đi Thực Chiến Cho Người Mới (Role-Based Onboarding Paths) */}
+        {/* 4. 4 Lối Đi Thực Chiến Cho Người Mới (Role-Based Onboarding Paths) */}
         <RoleBasedPathsSection
           onSelectRolePath={(category) => {
             setSelectedOpportunityCategory(category);
@@ -296,7 +320,7 @@ export default function HomePage() {
           onOpenCalculator={() => scrollToSection('cooperation-calculator')}
         />
 
-        {/* 4. Máy Tính Tỷ Lệ Chia Doanh Thu & Dòng Tiền (Cooperation ROI Calculator) */}
+        {/* 5. Máy Tính Tỷ Lệ Chia Doanh Thu & Dòng Tiền (Cooperation ROI Calculator) */}
         <CooperationCalculator
           onTransferToDealRoom={(promptText) => {
             setDealRoomPrompt({
@@ -310,13 +334,13 @@ export default function HomePage() {
           }}
         />
 
-        {/* 5. Giá trị cốt lõi (4 Pillars Bar) */}
+        {/* 6. Giá trị cốt lõi (4 Pillars Bar) */}
         <PillarsSection onSelectCategory={handleSelectPillar} />
 
-        {/* 6. Cách hoạt động (4 Steps) */}
+        {/* 7. Cách hoạt động (4 Steps) */}
         <HowItWorksSection />
 
-        {/* 7. Những cơ hội đang được chia sẻ (Opportunities Pool) */}
+        {/* 8. Những cơ hội đang được chia sẻ (Opportunities Pool) */}
         <OpportunitiesSection
           opportunities={opportunities}
           selectedCategory={selectedOpportunityCategory}
@@ -325,20 +349,6 @@ export default function HomePage() {
           onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
           onViewAll={() => {
             setSelectedOpportunityCategory('all');
-            scrollToSection('opportunities');
-          }}
-        />
-
-        {/* 8. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
-        <IndustryInsightsSection
-          onOpenDealRoomWithPrompt={(prompt) => {
-            setDealRoomPrompt(prompt);
-            scrollToSection('deal-room');
-            showToast('Đã nạp dữ liệu thương vụ vào Phòng Giao Thương!');
-          }}
-          onOpenPostDemand={() => setIsPostDemandOpen(true)}
-          onExploreOpportunities={(cat) => {
-            if (cat) setSelectedOpportunityCategory(cat);
             scrollToSection('opportunities');
           }}
         />
@@ -406,6 +416,23 @@ export default function HomePage() {
         isOpen={isPostDemandOpen}
         onClose={() => setIsPostDemandOpen(false)}
         onAddOpportunity={handleAddOpportunity}
+        currentUser={
+          firebaseUser
+            ? {
+                uid: firebaseUser.uid,
+                displayName: firebaseUser.displayName || loggedInUser || 'Thành viên J-Network',
+                email: firebaseUser.email || '',
+                photoURL: firebaseUser.photoURL || undefined,
+              }
+            : loggedInUser
+            ? {
+                uid: `user_${loggedInUser.replace(/\s+/g, '_')}`,
+                displayName: loggedInUser,
+                email: '',
+              }
+            : null
+        }
+        onRequireAuth={() => setAuthModalState({ isOpen: true, mode: 'login' })}
       />
 
       {/* 3. Auth Modal */}
@@ -442,7 +469,7 @@ export default function HomePage() {
         }
         onOpenPostDemand={() => {
           setMemberHubState({ isOpen: false, tab: 'opportunities' });
-          setIsPostDemandOpen(true);
+          handleOpenPostDemandSafe();
         }}
         onSelectOpportunity={(opp) => {
           setMemberHubState({ isOpen: false, tab: 'opportunities' });

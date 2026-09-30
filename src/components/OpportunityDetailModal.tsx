@@ -11,6 +11,8 @@ import {
   Trash2,
   ShieldCheck,
   Edit3,
+  Lock,
+  ArrowRight,
 } from 'lucide-react';
 import { OpportunityItem } from '../data/opportunitiesData';
 import { sendInvitation, deleteOpportunity, updateOpportunity } from '../lib/firestoreService';
@@ -271,6 +273,31 @@ export const OpportunityDetailModal: React.FC<OpportunityDetailModalProps> = ({
                     <span>{isDeleting ? 'Đang xóa...' : 'Xóa cơ hội'}</span>
                   </button>
                 </div>
+              </div>
+            ) : !currentUser ? (
+              <div className="p-5 bg-rose-50/60 border border-rose-200/80 rounded-2xl text-center space-y-3">
+                <div className="w-10 h-10 rounded-full bg-white text-[#FF2D55] flex items-center justify-center mx-auto shadow-2xs border border-rose-100">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h5 className="font-bold text-slate-900 text-sm">
+                    Đăng nhập để gửi đề xuất hợp tác
+                  </h5>
+                  <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                    Để bảo vệ thông tin liên hệ và đảm bảo tính nghiêm túc của các thương vụ, bạn cần đăng nhập tài khoản trước khi kết nối với <strong>{opportunity.creatorName}</strong>.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onRequireAuth?.();
+                  }}
+                  className="px-6 py-2.5 bg-[#FF2D55] hover:bg-[#E01E45] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer inline-flex items-center gap-2 active:scale-98"
+                >
+                  <span>Đăng nhập để kết nối ngay</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
             ) : (
               <>

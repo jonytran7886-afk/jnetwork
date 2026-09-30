@@ -67,7 +67,20 @@ export const MarketPulseTicker: React.FC<MarketPulseTickerProps> = ({
         </div>
 
         {/* Right CTA Links */}
-        <div className="flex items-center gap-2.5 shrink-0 text-[11px]">
+        <div className="flex items-center gap-2 shrink-0 text-[11px]">
+          {currentItem.sourceUrl && (
+            <a
+              href={currentItem.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer bg-slate-800/80 hover:bg-slate-800 px-2 py-1 rounded-lg border border-slate-700/60 hidden md:flex"
+              title="Xem bài viết gốc (Mở tab mới)"
+            >
+              <ExternalLink className="w-3 h-3 text-slate-400" />
+              <span>Nguồn gốc</span>
+            </a>
+          )}
+
           <button
             onClick={onExploreAll}
             className="text-slate-300 hover:text-white font-semibold transition-colors flex items-center gap-1 cursor-pointer bg-slate-800/80 hover:bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700/60"

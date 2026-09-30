@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 
 // ============================================================================
 // Types
@@ -91,40 +91,31 @@ export const syncUserProfile = async (user: {
   photoURL?: string | null;
   phoneNumber?: string | null;
 }): Promise<UserProfile> => {
-  const fallbackProfile: UserProfile = {
-    id: user.uid,
-    displayName: user.displayName || 'Thành viên J-Network',
-    email: user.email || '',
-    photoURL: user.photoURL || '',
-    phoneNumber: user.phoneNumber || '',
-    bio: 'Thành viên kết nối nguồn lực tại J-Network',
-    role: 'member',
-  };
+  const userRef = doc(db, 'users', user.uid);
+  const snap = await getDoc(userRef);
 
-  try {
-    const userRef = doc(db, 'users', user.uid);
-    const snap = await getDoc(userRef);
-
-    if (!snap.exists()) {
-      const newProfile: UserProfile = {
-        ...fallbackProfile,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
-      await setDoc(userRef, newProfile);
-      return newProfile;
-    } else {
-      const existing = snap.data() as UserProfile;
-      await updateDoc(userRef, {
-        updatedAt: serverTimestamp(),
-        ...(user.displayName && { displayName: user.displayName }),
-        ...(user.photoURL && { photoURL: user.photoURL }),
-      });
-      return { ...existing, id: user.uid };
-    }
-  } catch (error) {
-    console.warn('Lưu user profile Firestore:', error);
-    return fallbackProfile;
+  if (!snap.exists()) {
+    const newProfile: UserProfile = {
+      id: user.uid,
+      displayName: user.displayName || 'Thành viên Cùng Làm',
+      email: user.email || '',
+      photoURL: user.photoURL || '',
+      phoneNumber: user.phoneNumber || '',
+      bio: 'Thành viên kết nối nguồn lực tại Cùng Làm',
+      role: 'member',
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    await setDoc(userRef, newProfile);
+    return newProfile;
+  } else {
+    const existing = snap.data() as UserProfile;
+    await updateDoc(userRef, {
+      updatedAt: serverTimestamp(),
+      ...(user.displayName && { displayName: user.displayName }),
+      ...(user.photoURL && { photoURL: user.photoURL }),
+    });
+    return { ...existing, id: user.uid };
   }
 };
 
@@ -150,9 +141,15 @@ export const fetchOpportunities = async (): Promise<OpportunityDoc[]> => {
 export const createOpportunity = async (
   data: Omit<OpportunityDoc, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> => {
+  if (!auth.currentUser) {
+    throw new Error('Bạn cần đăng nhập tài khoản để đăng cơ hội & chia sẻ nguồn lực.');
+  }
+
   const oppsRef = collection(db, 'opportunities');
   const docRef = await addDoc(oppsRef, {
     ...data,
+    ownerId: auth.currentUser.uid,
+    ownerName: data.ownerName || auth.currentUser.displayName || 'Thành viên J-Network',
     status: data.status || 'active',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -165,6 +162,9 @@ export const updateOpportunity = async (
   ownerId: string,
   data: Partial<OpportunityDoc>
 ): Promise<void> => {
+  if (!auth.currentUser) {
+    throw new Error('Bạn cần đăng nhập để cập nhật cơ hội.');
+  }
   const oppRef = doc(db, 'opportunities', id);
   const snap = await getDoc(oppRef);
   if (!snap.exists()) throw new Error('Không tìm thấy cơ hội');
@@ -199,9 +199,14 @@ export const deleteOpportunity = async (
 export const sendInvitation = async (
   invitation: Omit<InvitationDoc, 'id' | 'createdAt' | 'updatedAt' | 'status'>
 ): Promise<string> => {
+  if (!auth.currentUser) {
+    throw new Error('Bạn cần đăng nhập tài khoản để gửi đề xuất hợp tác.');
+  }
+
   const invRef = collection(db, 'invitations');
   const docRef = await addDoc(invRef, {
     ...invitation,
+    senderId: auth.currentUser.uid,
     status: 'pending',
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
