@@ -6,6 +6,9 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
 import { Navbar } from '../components/Navbar';
 import { HeroSection } from '../components/HeroSection';
+import { InteractiveResourceMatchmaker } from '../components/InteractiveResourceMatchmaker';
+import { RoleBasedPathsSection } from '../components/RoleBasedPathsSection';
+import { CooperationCalculator } from '../components/CooperationCalculator';
 import { PillarsSection } from '../components/PillarsSection';
 import { HowItWorksSection } from '../components/HowItWorksSection';
 import { OpportunitiesSection } from '../components/OpportunitiesSection';
@@ -21,8 +24,9 @@ import { MemberHubModal } from '../components/MemberHubModal';
 import { CommercialDealRoom } from '../components/CommercialDealRoom';
 import { MarketPulseTicker } from '../components/MarketPulseTicker';
 import { IndustryInsightsSection } from '../components/IndustryInsightsSection';
+import { LegalTemplatesModal } from '../components/LegalTemplatesModal';
 import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
-import { INITIAL_INDUSTRY_INSIGHTS, IndustryInsightItem } from '../data/industryInsightsData';
+import { INITIAL_INDUSTRY_INSIGHTS } from '../data/industryInsightsData';
 
 export default function HomePage() {
   const [opportunities, setOpportunities] = useState<OpportunityItem[]>(INITIAL_OPPORTUNITIES);
@@ -30,7 +34,7 @@ export default function HomePage() {
   const [selectedOpportunityCategory, setSelectedOpportunityCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Deal Room Prompt State from Industry Insights
+  // Deal Room Prompt State from Industry Insights or Cooperation Calculator
   const [dealRoomPrompt, setDealRoomPrompt] = useState<{
     partyAResources: string;
     partyBResources: string;
@@ -52,6 +56,7 @@ export default function HomePage() {
   // Modals state
   const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
   const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
     isOpen: false,
     mode: 'register',
@@ -167,11 +172,11 @@ export default function HomePage() {
   // Tag click shortcut handler
   const handleTagClick = (tag: string) => {
     setSearchQuery(tag);
-    if (tag.includes('kinh doanh') || tag.includes('cà phê')) {
+    if (tag.includes('kinh doanh') || tag.includes('cà phê') || tag.includes('F&B')) {
       setSelectedOpportunityCategory('project');
-    } else if (tag.includes('văn phòng') || tag.includes('không gian')) {
+    } else if (tag.includes('văn phòng') || tag.includes('mặt bằng') || tag.includes('kho')) {
       setSelectedOpportunityCategory('space');
-    } else if (tag.includes('nguồn lực') || tag.includes('sản xuất')) {
+    } else if (tag.includes('nguồn lực') || tag.includes('sản xuất') || tag.includes('vốn')) {
       setSelectedOpportunityCategory('resource');
     } else {
       setSelectedOpportunityCategory('partner');
@@ -235,6 +240,9 @@ export default function HomePage() {
         onOpenPostDemand={() => setIsPostDemandOpen(true)}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
+          else if (id === 'legal') setIsLegalModalOpen(true);
+          else if (id === 'matchmaker') scrollToSection('matchmaker');
+          else if (id === 'calculator') scrollToSection('cooperation-calculator');
           else scrollToSection(id);
         }}
       />
@@ -250,7 +258,8 @@ export default function HomePage() {
 
       {/* Main Content */}
       <main className="flex-1">
-        {/* 1. Hero Section */}
+        
+        {/* 1. Hero Section with Sharper Value Prop & Quick Shortcuts */}
         <HeroSection
           activeHeroTab={activeHeroTab}
           setActiveHeroTab={(tab) => {
@@ -263,15 +272,51 @@ export default function HomePage() {
           onTagClick={handleTagClick}
           onSelectCard={handleSelectHeroCard}
           onOpenPostDemand={() => setIsPostDemandOpen(true)}
+          onScrollToMatchmaker={() => scrollToSection('matchmaker')}
+          onScrollToRoles={() => scrollToSection('role-paths')}
+          onOpenLegalTemplates={() => setIsLegalModalOpen(true)}
         />
 
-        {/* 2. Giá trị cốt lõi (4 Pillars Bar) */}
+        {/* 2. Interactive Matchmaker 60s (Tôi Có Gì - Tôi Cần Gì) */}
+        <section id="matchmaker" className="py-8 sm:py-10 max-w-7xl mx-auto px-4 sm:px-6">
+          <InteractiveResourceMatchmaker
+            opportunities={opportunities}
+            onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
+            onPostDemand={() => setIsPostDemandOpen(true)}
+          />
+        </section>
+
+        {/* 3. 4 Lối Đi Thực Chiến Cho Người Mới (Role-Based Onboarding Paths) */}
+        <RoleBasedPathsSection
+          onSelectRolePath={(category) => {
+            setSelectedOpportunityCategory(category);
+            scrollToSection('opportunities');
+            showToast(`Đã lọc các cơ hội theo nhóm: ${category}`);
+          }}
+          onOpenCalculator={() => scrollToSection('cooperation-calculator')}
+        />
+
+        {/* 4. Máy Tính Tỷ Lệ Chia Doanh Thu & Dòng Tiền (Cooperation ROI Calculator) */}
+        <CooperationCalculator
+          onTransferToDealRoom={(promptText) => {
+            setDealRoomPrompt({
+              partyAResources: 'Tài sản / Mặt bằng / Vốn góp của tôi',
+              partyBResources: 'Thương hiệu, quy trình vận hành và hệ thống bán lẻ POS',
+              dealType: 'Hợp tác kinh doanh (BCC) chia sẻ doanh thu',
+              targetGoal: promptText,
+            });
+            scrollToSection('deal-room');
+            showToast('Đã nạp số liệu tính toán vào Phòng Đàm Phán!');
+          }}
+        />
+
+        {/* 5. Giá trị cốt lõi (4 Pillars Bar) */}
         <PillarsSection onSelectCategory={handleSelectPillar} />
 
-        {/* 3. Cách hoạt động (4 Steps) */}
+        {/* 6. Cách hoạt động (4 Steps) */}
         <HowItWorksSection />
 
-        {/* 4. Những cơ hội đang được chia sẻ (Opportunities) */}
+        {/* 7. Những cơ hội đang được chia sẻ (Opportunities Pool) */}
         <OpportunitiesSection
           opportunities={opportunities}
           selectedCategory={selectedOpportunityCategory}
@@ -284,7 +329,7 @@ export default function HomePage() {
           }}
         />
 
-        {/* 5. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
+        {/* 8. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
         <IndustryInsightsSection
           onOpenDealRoomWithPrompt={(prompt) => {
             setDealRoomPrompt(prompt);
@@ -298,22 +343,22 @@ export default function HomePage() {
           }}
         />
 
-        {/* 6. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
+        {/* 9. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
         <section id="deal-room">
           <CommercialDealRoom initialPrompt={dealRoomPrompt} />
         </section>
 
-        {/* 6. Câu chuyện thành công (Success Stories) */}
+        {/* 10. Câu chuyện thành công (Success Stories) */}
         <SuccessStoriesSection
           onViewAll={() => {
             scrollToSection('community-values');
           }}
         />
 
-        {/* 6. Giá trị cộng đồng (Community Values) */}
+        {/* 11. Giá trị cộng đồng (Community Values) */}
         <CommunityValuesSection />
 
-        {/* 6. CTA Banner */}
+        {/* 12. CTA Banner */}
         <CtaSection
           onJoinCommunity={() => setAuthModalState({ isOpen: true, mode: 'register' })}
           onExploreOpportunities={() => scrollToSection('opportunities')}
@@ -322,7 +367,10 @@ export default function HomePage() {
 
       {/* Footer */}
       <Footer
-        onNavigateSection={(id) => scrollToSection(id)}
+        onNavigateSection={(id) => {
+          if (id === 'legal') setIsLegalModalOpen(true);
+          else scrollToSection(id);
+        }}
         onSelectCategory={(cat) => handleSelectPillar(cat)}
         onOpenPrinciples={() => setPrinciplesModalState({ isOpen: true, defaultTab: 'principles' })}
         onOpenSupport={(topic) => {
@@ -358,17 +406,16 @@ export default function HomePage() {
         isOpen={isPostDemandOpen}
         onClose={() => setIsPostDemandOpen(false)}
         onAddOpportunity={handleAddOpportunity}
-        usedImageUrls={opportunities.map((item) => item.imageUrl)}
       />
 
       {/* 3. Auth Modal */}
       <AuthModal
         isOpen={authModalState.isOpen}
         initialMode={authModalState.mode}
-        onClose={() => setAuthModalState({ ...authModalState, isOpen: false })}
+        onClose={() => setAuthModalState({ isOpen: false, mode: 'login' })}
         onSuccess={(name) => {
           setLoggedInUser(name);
-          showToast(`Chào mừng ${name} đến với Cùng Làm!`);
+          showToast(`Chào mừng bạn ${name} đã tham gia J-Network!`);
         }}
       />
 
@@ -376,14 +423,13 @@ export default function HomePage() {
       <CommunityPrinciplesModal
         isOpen={principlesModalState.isOpen}
         defaultTab={principlesModalState.defaultTab}
-        onClose={() => setPrinciplesModalState({ ...principlesModalState, isOpen: false })}
+        onClose={() => setPrinciplesModalState({ isOpen: false, defaultTab: 'principles' })}
       />
 
-      {/* 5. Member Hub Modal (Opportunities, Invitations, Messages) */}
+      {/* 5. Member Workspace Hub Modal */}
       <MemberHubModal
         isOpen={memberHubState.isOpen}
-        initialTab={memberHubState.tab}
-        onClose={() => setMemberHubState({ ...memberHubState, isOpen: false })}
+        onClose={() => setMemberHubState({ isOpen: false, tab: 'opportunities' })}
         currentUser={
           firebaseUser
             ? {
@@ -394,17 +440,31 @@ export default function HomePage() {
               }
             : null
         }
-        onOpenPostDemand={() => setIsPostDemandOpen(true)}
-        onSelectOpportunity={(opp) => setActiveDetailItem(opp)}
+        onOpenPostDemand={() => {
+          setMemberHubState({ isOpen: false, tab: 'opportunities' });
+          setIsPostDemandOpen(true);
+        }}
+        onSelectOpportunity={(opp) => {
+          setMemberHubState({ isOpen: false, tab: 'opportunities' });
+          setActiveDetailItem(opp);
+        }}
+        initialTab={memberHubState.tab}
       />
 
-      {/* Toast Notification */}
+      {/* 6. Legal & MOU Templates Starter Kit Modal */}
+      <LegalTemplatesModal
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        onToast={showToast}
+      />
+
+      {/* Global Toast */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl border border-slate-700 animate-in fade-in slide-in-from-bottom-2 duration-200">
-          {toastMessage}
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs sm:text-sm font-semibold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
         </div>
       )}
-
     </div>
   );
 }

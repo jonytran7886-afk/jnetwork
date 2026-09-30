@@ -79,12 +79,36 @@ export const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         {/* Center Navigation Links - Streamlined to prevent overflow */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 2xl:gap-8 text-xs xl:text-sm font-semibold text-slate-700 shrink-0">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6 text-xs xl:text-sm font-semibold text-slate-700 shrink-0">
+          <button
+            onClick={() => handleNavClick('matchmaker')}
+            className="text-[#FF2D55] font-black hover:text-[#e01e45] transition-colors cursor-pointer shrink-0"
+          >
+            Ghép nối 60s
+          </button>
+          <button
+            onClick={() => handleNavClick('role-paths')}
+            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
+          >
+            4 Lối đi
+          </button>
+          <button
+            onClick={() => handleNavClick('cooperation-calculator')}
+            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
+          >
+            Máy tính ROI
+          </button>
           <button
             onClick={() => handleNavClick('opportunities')}
             className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
-            Khám phá
+            Cơ hội
+          </button>
+          <button
+            onClick={() => handleNavClick('legal')}
+            className="text-emerald-700 hover:text-emerald-900 font-bold transition-colors cursor-pointer shrink-0"
+          >
+            Mẫu Hợp Đồng (MOU)
           </button>
           <button
             onClick={() => handleNavClick('industry-insights')}
@@ -97,18 +121,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
             <span>Phòng Giao Thương</span>
-          </button>
-          <button
-            onClick={() => handleNavClick('community-values')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
-          >
-            Cộng đồng
-          </button>
-          <button
-            onClick={() => handleNavClick('about-us')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
-          >
-            Về chúng tôi
           </button>
         </nav>
 
@@ -196,10 +208,34 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="lg:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3">
           <nav className="flex flex-col space-y-2 text-sm font-semibold text-slate-700">
             <button
+              onClick={() => handleNavClick('matchmaker')}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-[#FF2D55]"
+            >
+              Ghép nối nguồn lực 60s
+            </button>
+            <button
+              onClick={() => handleNavClick('role-paths')}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-800"
+            >
+              4 Lối đi cho người mới
+            </button>
+            <button
+              onClick={() => handleNavClick('cooperation-calculator')}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-800"
+            >
+              Máy tính chia doanh thu ROI
+            </button>
+            <button
+              onClick={() => handleNavClick('legal')}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-emerald-700"
+            >
+              Tải Mẫu Hợp Đồng (MOU/BCC)
+            </button>
+            <button
               onClick={() => handleNavClick('opportunities')}
               className="text-left px-3 py-2 rounded-lg hover:bg-slate-50"
             >
-              Khám phá
+              Danh sách cơ hội
             </button>
             <button
               onClick={() => handleNavClick('industry-insights')}
