@@ -25,6 +25,7 @@ import { CommercialDealRoom } from '../components/CommercialDealRoom';
 import { MarketPulseTicker } from '../components/MarketPulseTicker';
 import { IndustryInsightsSection } from '../components/IndustryInsightsSection';
 import { LegalTemplatesModal } from '../components/LegalTemplatesModal';
+import { BusinessRolodexModal } from '../components/BusinessRolodexModal';
 import { INITIAL_OPPORTUNITIES, OpportunityItem } from '../data/opportunitiesData';
 import { INITIAL_INDUSTRY_INSIGHTS } from '../data/industryInsightsData';
 
@@ -57,6 +58,7 @@ export default function HomePage() {
   const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
   const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
+  const [isRolodexOpen, setIsRolodexOpen] = useState<boolean>(false);
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
     isOpen: false,
     mode: 'register',
@@ -216,6 +218,16 @@ export default function HomePage() {
     setIsPostDemandOpen(true);
   };
 
+  // Handler strictly enforcing mandatory authentication before opening Rolodex (tied to each user)
+  const handleOpenRolodexSafe = () => {
+    if (!firebaseUser && !loggedInUser) {
+      showToast('Tính năng Sổ Danh Bạ & Danh Thiếp B2B bắt buộc đăng nhập vì quản lý theo từng người dùng.');
+      setAuthModalState({ isOpen: true, mode: 'login' });
+      return;
+    }
+    setIsRolodexOpen(true);
+  };
+
   // Add new opportunity
   const handleAddOpportunity = (newItem: OpportunityItem) => {
     setOpportunities([newItem, ...opportunities]);
@@ -248,6 +260,7 @@ export default function HomePage() {
         onOpenAuth={(mode) => setAuthModalState({ isOpen: true, mode })}
         onOpenMemberHub={(tab) => setMemberHubState({ isOpen: true, tab: tab || 'opportunities' })}
         onOpenPostDemand={handleOpenPostDemandSafe}
+        onOpenRolodex={handleOpenRolodexSafe}
         onNavigateSection={(id) => {
           if (id === 'about-us') scrollToSection('about-us');
           else if (id === 'legal') setIsLegalModalOpen(true);
@@ -285,6 +298,7 @@ export default function HomePage() {
           onScrollToMatchmaker={() => scrollToSection('matchmaker')}
           onScrollToRoles={() => scrollToSection('role-paths')}
           onOpenLegalTemplates={() => setIsLegalModalOpen(true)}
+          onOpenRolodex={handleOpenRolodexSafe}
         />
 
         {/* 2. Bản Tin & Xu Hướng Thị Trường B2B (Industry Insights & Market Intelligence) */}
@@ -475,6 +489,7 @@ export default function HomePage() {
           setMemberHubState({ isOpen: false, tab: 'opportunities' });
           setActiveDetailItem(opp);
         }}
+        onOpenRolodex={handleOpenRolodexSafe}
         initialTab={memberHubState.tab}
       />
 
@@ -483,6 +498,37 @@ export default function HomePage() {
         isOpen={isLegalModalOpen}
         onClose={() => setIsLegalModalOpen(false)}
         onToast={showToast}
+      />
+
+      {/* 7. Business Rolodex & B2B Dynamic Digital Card Modal */}
+      <BusinessRolodexModal
+        isOpen={isRolodexOpen}
+        onClose={() => setIsRolodexOpen(false)}
+        currentUser={
+          firebaseUser
+            ? {
+                uid: firebaseUser.uid,
+                displayName: firebaseUser.displayName || 'Thành viên',
+                email: firebaseUser.email || '',
+                photoURL: firebaseUser.photoURL || undefined,
+              }
+            : loggedInUser
+            ? {
+                uid: `user_${loggedInUser.replace(/\s+/g, '_')}`,
+                displayName: loggedInUser,
+                email: '',
+              }
+            : null
+        }
+        onRequireAuth={() => {
+          setIsRolodexOpen(false);
+          setAuthModalState({ isOpen: true, mode: 'login' });
+        }}
+        onOpenDealRoomWithPrompt={(prompt) => {
+          setDealRoomPrompt(prompt);
+          scrollToSection('deal-room');
+          showToast('Đã nạp thông tin đối tác vào Phòng Giao Thương!');
+        }}
       />
 
       {/* Global Toast */}

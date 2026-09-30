@@ -122,6 +122,33 @@
         "update": "true",
         "delete": "true"
       }
+    },
+    "BusinessContact": {
+      "collection": "business_contacts",
+      "fields": {
+        "id": { "type": "string", "description": "ID liên hệ đối tác" },
+        "userId": { "type": "string", "description": "UID người sở hữu danh bạ" },
+        "contactName": { "type": "string", "description": "Họ và tên đối tác" },
+        "company": { "type": "string", "description": "Tên doanh nghiệp / công ty" },
+        "position": { "type": "string", "description": "Chức vụ" },
+        "phone": { "type": "string", "description": "Số điện thoại liên hệ" },
+        "zaloPhone": { "type": "string", "description": "Số Zalo liên hệ" },
+        "email": { "type": "string", "description": "Email" },
+        "industry": { "type": "string", "description": "Ngành nghề kinh doanh" },
+        "location": { "type": "string", "description": "Địa điểm / tỉnh thành" },
+        "tags": { "type": "array", "description": "Nhãn phân loại (Hội chợ, Cung ứng, Khách hàng...)" },
+        "coreStrengths": { "type": "string", "description": "Thế mạnh cốt lõi & năng lực cung cấp" },
+        "needs": { "type": "string", "description": "Nhu cầu cần hợp tác" },
+        "meetingContext": { "type": "string", "description": "Ngữ cảnh gặp gỡ" },
+        "createdAt": { "type": "string", "description": "Thời gian lưu" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
     }
   }
 }

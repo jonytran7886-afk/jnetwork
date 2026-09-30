@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, User as UserIcon, Plus, Bell, MessageSquare, FolderKanban, Inbox } from 'lucide-react';
+import { Menu, X, LogOut, User as UserIcon, Plus, Bell, MessageSquare, FolderKanban, Inbox, Contact, QrCode } from 'lucide-react';
 import { auth, signOutUser, db } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
@@ -14,6 +14,7 @@ interface NavbarProps {
   onLogout?: () => void;
   onOpenMemberHub?: (tab?: 'opportunities' | 'invitations' | 'messages') => void;
   onOpenPostDemand?: () => void;
+  onOpenRolodex?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -23,6 +24,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenMemberHub,
   onOpenPostDemand,
+  onOpenRolodex,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -93,22 +95,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             4 Lối đi
           </button>
           <button
-            onClick={() => handleNavClick('cooperation-calculator')}
-            className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
-          >
-            Máy tính ROI
-          </button>
-          <button
             onClick={() => handleNavClick('opportunities')}
             className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
             Cơ hội
-          </button>
-          <button
-            onClick={() => handleNavClick('legal')}
-            className="text-emerald-700 hover:text-emerald-900 font-bold transition-colors cursor-pointer shrink-0"
-          >
-            Mẫu Hợp Đồng (MOU)
           </button>
           <button
             onClick={() => handleNavClick('industry-insights')}
@@ -121,6 +111,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="hover:text-[#FF2D55] transition-colors cursor-pointer shrink-0"
           >
             <span>Phòng Giao Thương</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenRolodex) onOpenRolodex();
+            }}
+            className="text-amber-800 hover:text-[#FF2D55] font-bold transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+            title="Sổ danh bạ đối tác & Danh thiếp số B2B (Không sợ mất số)"
+          >
+            <Contact className="w-3.5 h-3.5 text-amber-600" />
+            <span>Sổ Danh Bạ</span>
           </button>
         </nav>
 
@@ -220,18 +221,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               4 Lối đi cho người mới
             </button>
             <button
-              onClick={() => handleNavClick('cooperation-calculator')}
-              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-800"
-            >
-              Máy tính chia doanh thu ROI
-            </button>
-            <button
-              onClick={() => handleNavClick('legal')}
-              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-emerald-700"
-            >
-              Tải Mẫu Hợp Đồng (MOU/BCC)
-            </button>
-            <button
               onClick={() => handleNavClick('opportunities')}
               className="text-left px-3 py-2 rounded-lg hover:bg-slate-50"
             >
@@ -248,6 +237,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="text-left px-3 py-2 rounded-lg hover:bg-slate-50"
             >
               Phòng Giao Thương
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                if (onOpenRolodex) onOpenRolodex();
+              }}
+              className="text-left px-3 py-2 rounded-lg hover:bg-slate-50 font-bold text-amber-800 flex items-center gap-2"
+            >
+              <Contact className="w-4 h-4 text-amber-600" />
+              <span>Sổ Danh Bạ Đối Tác (B2B Rolodex)</span>
             </button>
             <button
               onClick={() => handleNavClick('community-values')}

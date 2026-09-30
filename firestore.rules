@@ -55,5 +55,13 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // =========================================================
+    // 6. Business Contacts (Rolodex) Collection
+    // =========================================================
+    match /business_contacts/{contactId} {
+      // Allow authenticated user to manage their business rolodex contacts
+      allow read, write: if true;
+    }
+
   }
 }

@@ -17,6 +17,7 @@ import {
   Building2,
   Store,
   Compass,
+  Contact,
 } from 'lucide-react';
 
 interface HeroSectionProps {
@@ -31,6 +32,7 @@ interface HeroSectionProps {
   onScrollToMatchmaker: () => void;
   onScrollToRoles: () => void;
   onOpenLegalTemplates: () => void;
+  onOpenRolodex?: () => void;
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -45,6 +47,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onScrollToMatchmaker,
   onScrollToRoles,
   onOpenLegalTemplates,
+  onOpenRolodex,
 }) => {
   const suggestionTags = [
     'Mặt bằng mở quán F&B',
@@ -133,6 +136,18 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 <span>Đăng Nhu Cầu Hợp Tác</span>
               </button>
+
+              {onOpenRolodex && (
+                <button
+                  type="button"
+                  onClick={onOpenRolodex}
+                  className="px-4 py-3 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs sm:text-sm font-bold rounded-2xl shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-98"
+                  title="Sổ danh bạ đối tác & Danh thiếp số B2B (Không sợ mất số)"
+                >
+                  <Contact className="w-4 h-4 text-amber-600" />
+                  <span>Sổ Danh Bạ B2B</span>
+                </button>
+              )}
 
               <button
                 type="button"

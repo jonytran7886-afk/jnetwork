@@ -18,6 +18,7 @@ import {
   ExternalLink,
   ChevronRight,
   ShieldCheck,
+  Contact,
 } from 'lucide-react';
 import {
   collection,
@@ -51,6 +52,7 @@ interface MemberHubModalProps {
   } | null;
   onOpenPostDemand: () => void;
   onSelectOpportunity: (opp: OpportunityItem) => void;
+  onOpenRolodex?: () => void;
   initialTab?: 'opportunities' | 'invitations' | 'messages';
 }
 
@@ -60,6 +62,7 @@ export const MemberHubModal: React.FC<MemberHubModalProps> = ({
   currentUser,
   onOpenPostDemand,
   onSelectOpportunity,
+  onOpenRolodex,
   initialTab = 'opportunities',
 }) => {
   const [activeTab, setActiveTab] = useState<'opportunities' | 'invitations' | 'messages'>(initialTab);
@@ -391,6 +394,20 @@ export const MemberHubModal: React.FC<MemberHubModalProps> = ({
               {conversations.length}
             </span>
           </button>
+
+          {onOpenRolodex && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenRolodex();
+              }}
+              className="ml-auto my-auto py-1.5 px-3 text-xs font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap shadow-2xs"
+            >
+              <Contact className="w-3.5 h-3.5 text-amber-600" />
+              <span>Sổ Danh Bạ B2B</span>
+            </button>
+          )}
         </div>
 
         {/* Tab Content */}
