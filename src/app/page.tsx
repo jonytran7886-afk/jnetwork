@@ -353,7 +353,21 @@ export default function HomePage() {
           }}
         />
 
-        {/* 9. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
+        {/* 9. Bản Tin Giao Thương & Radar Cơ Hội B2B (Market Intelligence & 4 Pillars) */}
+        <IndustryInsightsSection
+          onOpenDealRoomWithPrompt={(prompt) => {
+            setDealRoomPrompt(prompt);
+            scrollToSection('deal-room');
+            showToast('Đã nạp đề xuất hợp tác vào Phòng Giao Thương!');
+          }}
+          onOpenPostDemand={handleOpenPostDemandSafe}
+          onExploreOpportunities={(category) => {
+            if (category) setSelectedOpportunityCategory(category);
+            scrollToSection('opportunities');
+          }}
+        />
+
+        {/* 10. Phòng Giao Thương B2B & Chốt Hợp Tác (Commercial Deal Room) */}
         <section id="deal-room">
           <CommercialDealRoom initialPrompt={dealRoomPrompt} />
         </section>

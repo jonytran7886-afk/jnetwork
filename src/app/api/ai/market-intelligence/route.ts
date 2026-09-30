@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ai } from '@/src/lib/gemini';
-import { INITIAL_INDUSTRY_INSIGHTS } from '@/src/data/industryInsightsData';
+import { INITIAL_INDUSTRY_INSIGHTS, IndustryInsightItem } from '@/src/data/industryInsightsData';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get('category');
+    const pillar = searchParams.get('pillar');
+    const region = searchParams.get('region');
 
     let results = INITIAL_INDUSTRY_INSIGHTS;
     if (category && category !== 'all') {
       results = results.filter((item) => item.category === category);
+    }
+    if (pillar && pillar !== 'all') {
+      results = results.filter((item) => item.pillar === pillar);
+    }
+    if (region && region !== 'all') {
+      results = results.filter((item) => item.region === region || item.region === 'Toàn quốc');
     }
 
     return NextResponse.json({
@@ -26,34 +34,37 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { topic, industrySector, customNote } = body;
+    const { topic, industrySector, customNote, pillar } = body;
 
-    const queryTopic = topic || 'Xu hướng liên kết nguồn lực và tối ưu chi phí vận hành doanh nghiệp Việt Nam';
+    const queryTopic = topic || 'Cơ hội giao thương, đầu tư và liên minh dự án B2B tại Việt Nam';
+    const activePillar = pillar || 'trade';
 
     if (ai) {
       try {
         const prompt = `
 Bạn là Giám đốc Phân tích Thị trường & Chiến lược Thương mại cấp cao (Chief Strategy Officer & Market Intelligence Lead).
-Hãy phân tích và viết một bài báo cáo "Nhịp đập Thị trường & Cơ hội Hợp tác B2B (Market Intelligence Brief)" cho cộng đồng doanh nghiệp J-Network:
+Hãy sử dụng công cụ tìm kiếm Google Search để cập nhật những dữ liệu, báo cáo, chính sách hoặc diễn biến kinh doanh mới nhất tại Việt Nam liên quan đến:
 
-Chủ đề yêu cầu: "${queryTopic}"
-Lĩnh vực mục tiêu: "${industrySector || 'Kinh doanh & Sản xuất tổng hợp'}"
-Ghi chú thêm: "${customNote || 'Tập trung vào tính thực chiến, số liệu và cơ hội hợp tác đôi bên cùng có lợi'}"
+Chủ đề tìm kiếm: "${queryTopic}"
+Lĩnh vực/Ngành: "${industrySector || 'Giao thương, Đầu tư & Hợp tác đa ngành'}"
+Trụ cột trọng tâm: "${activePillar}" (Một trong 4 trụ cột: trade = Giao thương/Xuất nhập khẩu, investment = Đầu tư/Vốn/M&A, cooperation = Hợp tác/Nhượng quyền/Nguồn lực, projects = Dự án/Đấu thầu/KCN)
+Ghi chú thêm: "${customNote || 'Tập trung vào cơ hội hợp tác đôi bên cùng có lợi và số liệu thực tế'}"
 
-Bài phân tích cần:
-1. Độc quyền, sắc bén, ngôn ngữ kinh doanh chuyên nghiệp.
-2. Tóm tắt 1 câu dành cho lãnh đạo bận rộn (Executive 30s briefing).
-3. 3 ý đúc kết then chốt (Key Takeaways) có giá trị thực tiễn.
+Yêu cầu đầu ra:
+1. Thông tin thực tế, cập nhật, dẫn nguồn uy tín (Bộ Công Thương, Bộ KH&ĐT, VCCI, Tổng cục Hải quan, Báo Đầu Tư, Ban Quản lý KCN...).
+2. Tóm tắt 1 câu ngắn gọn dành cho lãnh đạo bận rộn (Executive 30s briefing).
+3. 3 điểm đúc kết then chốt (Key Takeaways) có số liệu hoặc phân tích thực tế.
 4. Một cơ hội hành động cụ thể (Actionable Opportunity): Doanh nghiệp A và Doanh nghiệp B có thể liên kết gì với nhau ngay hôm nay để đón đầu xu hướng này?
-5. Gợi ý thông tin đàm phán mẫu để đưa thẳng vào phòng giao thương (Deal Room).
+5. Gợi ý cấu trúc đàm phán hợp tác mẫu (Default Deal Prompt) để nạp thẳng vào phòng giao thương (Commercial Deal Room).
 
-Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa):
+Hãy trả về DUY NHẤT một chuỗi JSON hợp lệ theo cấu trúc sau (không kèm markdown thừa):
 {
   "title": string (Tiêu đề sắc nét, thu hút dưới 20 từ),
-  "category": "supply_chain" | "policy_tax" | "funding_market" | "case_study" | "tech_ai",
-  "categoryLabel": string (Tiếng Việt: Chuỗi Cung Ứng / Chính Sách & Thuế / Dòng Vốn & Thị Trường / Bài Học Thực Chiến / AI & Công Nghệ),
-  "summary": string (1 câu tóm tắt cốt lõi dưới 40 từ),
-  "content": string (Bài phân tích 2 đoạn khoảng 120-150 từ giải thích rõ nguyên nhân và diễn biến),
+  "category": "trade_commerce" | "investment_capital" | "b2b_cooperation" | "projects_tenders" | "policy_tax" | "tech_ai",
+  "categoryLabel": string (Tiếng Việt: Giao Thương & Xuất Khẩu / Đầu Tư & Dòng Vốn / Hợp Tác & Nguồn Lực / Dự Án & Đấu Thầu / Chính Sách & Thuế),
+  "pillar": "trade" | "investment" | "cooperation" | "projects",
+  "summary": string (1 câu tóm tắt cốt lõi dưới 45 từ),
+  "content": string (Bài phân tích 2 đoạn khoảng 120-160 từ giải thích rõ bối cảnh và tiềm năng hợp tác),
   "keyTakeaways": [string, string, string] (3 gạch đầu dòng then chốt),
   "actionableOpportunity": string (Cơ hội hợp tác thực chiến cho các thành viên mạng lưới),
   "defaultDealPrompt": {
@@ -62,67 +73,154 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa
     "dealType": string,
     "targetGoal": string
   },
-  "source": string (Tổ chức/Nguồn uy tín tham chiếu),
-  "sourceUrl": string (URL trang báo hoặc cổng thông tin uy tín, ví dụ: https://baochinhphu.vn, https://vcci.com.vn, https://sbv.gov.vn, https://moit.gov.vn...),
+  "source": string (Tổ chức/Báo chí uy tín tham chiếu, ví dụ: Bộ Công Thương, VCCI, Bộ Kế hoạch & Đầu tư, Báo Đầu Tư...),
+  "sourceUrl": string (URL trang web uy tín),
   "readTime": "3 phút đọc",
-  "imageUrl": string (URL Unsplash chất lượng cao phù hợp)
+  "imageUrl": string (URL ảnh Unsplash chất lượng cao liên quan đến ngành),
+  "region": "Toàn quốc" | "Miền Bắc" | "Miền Trung" | "Miền Nam" | "Quốc tế"
 }
 `;
 
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.8-flash',
           contents: prompt,
           config: {
-            responseMimeType: 'application/json',
-            temperature: 0.6,
+            tools: [{ googleSearch: {} }],
           },
         });
 
-        const responseText = response.text?.trim() || '{}';
-        const parsed = JSON.parse(responseText);
+        const rawText = response.text?.trim() || '';
+        // Clean markdown backticks if returned
+        let cleanJsonText = rawText;
+        if (cleanJsonText.startsWith('```json')) {
+          cleanJsonText = cleanJsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (cleanJsonText.startsWith('```')) {
+          cleanJsonText = cleanJsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
 
-        const newInsight = {
-          id: `ai-insight-${Date.now()}`,
-          ...parsed,
-          sourceUrl: parsed.sourceUrl || 'https://baochinhphu.vn',
-          publishedAt: 'Vừa xong (AI Real-time Intelligence)',
-          isTrending: true,
-          viewsCount: 1,
-        };
+        let parsed: any = {};
+        try {
+          parsed = JSON.parse(cleanJsonText);
+        } catch {
+          // Attempt to extract JSON substring
+          const jsonMatch = cleanJsonText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsed = JSON.parse(jsonMatch[0]);
+          }
+        }
 
-        return NextResponse.json({ success: true, data: newInsight, source: 'gemini-2.5-flash' });
+        // Extract Google Search Grounding Metadata citations if available
+        const groundingChunks = (response.candidates?.[0] as any)?.groundingMetadata?.groundingChunks;
+        if (Array.isArray(groundingChunks) && groundingChunks.length > 0) {
+          const webChunk = groundingChunks.find((c: any) => c.web?.uri);
+          if (webChunk?.web?.uri) {
+            parsed.sourceUrl = webChunk.web.uri;
+          }
+          if (webChunk?.web?.title && (!parsed.source || parsed.source.length < 3)) {
+            parsed.source = webChunk.web.title;
+          }
+        }
+
+        if (parsed.title) {
+          const newInsight: IndustryInsightItem = {
+            id: `ai-grounded-${Date.now()}`,
+            title: parsed.title,
+            category: parsed.category || (activePillar === 'trade' ? 'trade_commerce' : activePillar === 'investment' ? 'investment_capital' : activePillar === 'projects' ? 'projects_tenders' : 'b2b_cooperation'),
+            categoryLabel: parsed.categoryLabel || (activePillar === 'trade' ? 'Giao Thương & Xuất Khẩu' : activePillar === 'investment' ? 'Đầu Tư & Dòng Vốn' : activePillar === 'projects' ? 'Dự Án & Đấu Thầu' : 'Hợp Tác & Nguồn Lực'),
+            pillar: parsed.pillar || activePillar,
+            summary: parsed.summary || 'Thông tin thị trường cập nhật theo thời gian thực.',
+            content: parsed.content || 'Đang cập nhật nội dung chi tiết theo diễn biến thực tế.',
+            keyTakeaways: Array.isArray(parsed.keyTakeaways) && parsed.keyTakeaways.length > 0 ? parsed.keyTakeaways : ['Cơ hội mở rộng chuỗi liên kết giá trị.', 'Tối ưu chi phí vận hành và rủi ro thị trường.', 'Tăng cường hợp tác liên ngành bền vững.'],
+            actionableOpportunity: parsed.actionableOpportunity || 'Kết nối ngay với các thành viên phù hợp trên J-Network.',
+            suggestedActionType: 'deal_room',
+            suggestedActionLabel: 'Mở Phòng Giao Thương Đàm Phán',
+            defaultDealPrompt: parsed.defaultDealPrompt || {
+              partyAResources: 'Năng lực cung ứng hoặc chuyên môn cốt lõi của đơn vị.',
+              partyBResources: 'Kênh phân phối, nguồn vốn hoặc cơ sở hạ tầng bổ trợ.',
+              dealType: 'Liên minh hợp tác chiến lược',
+              targetGoal: 'Thực hiện dự án thử nghiệm trong 60 ngày.'
+            },
+            source: parsed.source || 'Bộ Công Thương & Cổng Dữ Liệu B2B',
+            sourceUrl: parsed.sourceUrl || 'https://moit.gov.vn',
+            publishedAt: 'Vừa xong (Google Search Grounding)',
+            readTime: parsed.readTime || '3 phút đọc',
+            imageUrl: parsed.imageUrl || 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+            isTrending: true,
+            viewsCount: 1,
+            region: parsed.region || 'Toàn quốc',
+          };
+
+          return NextResponse.json({ success: true, data: newInsight, source: 'gemini-3.8-flash-grounded' });
+        }
       } catch (err: any) {
-        console.error('Gemini error in market-intelligence:', err?.message || err);
+        console.error('Lỗi Gemini Search Grounding:', err?.message || err);
       }
     }
 
-    // Heuristic Fallback
-    const fallbackInsight = {
+    // Heuristic Fallback per Pillar
+    const pillarConfig = {
+      trade: {
+        category: 'trade_commerce' as const,
+        label: 'Giao Thương & Xuất Khẩu',
+        img: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=800&q=80',
+        source: 'Bộ Công Thương & Vietrade',
+        url: 'https://vietrade.gov.vn'
+      },
+      investment: {
+        category: 'investment_capital' as const,
+        label: 'Đầu Tư & Dòng Vốn',
+        img: 'https://images.unsplash.com/photo-1559526324-4b87b5e36e44?auto=format&fit=crop&w=800&q=80',
+        source: 'Cục Đầu tư Nước ngoài & Báo Đầu Tư',
+        url: 'https://baodautu.vn'
+      },
+      cooperation: {
+        category: 'b2b_cooperation' as const,
+        label: 'Hợp Tác & Nguồn Lực',
+        img: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
+        source: 'Hiệp hội Doanh nghiệp TP.HCM (HUBA)',
+        url: 'https://huba.vn'
+      },
+      projects: {
+        category: 'projects_tenders' as const,
+        label: 'Dự Án & Đấu Thầu',
+        img: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80',
+        source: 'Bộ Kế hoạch & Đầu tư & Mạng Đấu Thầu',
+        url: 'https://mpi.gov.vn'
+      }
+    };
+
+    const curPillarInfo = pillarConfig[activePillar as keyof typeof pillarConfig] || pillarConfig.trade;
+
+    const fallbackInsight: IndustryInsightItem = {
       id: `fallback-insight-${Date.now()}`,
-      title: `Phân tích chuyên sâu: ${queryTopic} — Cơ hội tái cấu trúc chuỗi giá trị và tối ưu chi phí 2026`,
-      category: 'supply_chain',
-      categoryLabel: 'Chuỗi Cung Ứng & Thị Trường',
-      summary: 'Biến động thị trường mở ra thời cơ vàng cho các doanh nghiệp vừa và nhỏ chia sẻ tài nguyên dư thừa và liên minh đa kênh.',
-      content: 'Trong bối cảnh chi phí thu hút khách hàng mới (CAC) tăng hơn 35% trên các kênh truyền thống, việc liên kết nguồn lực giữa các đối tác có tệp khách hàng tương đồng nhưng không cạnh tranh trực tiếp đang là chiến lược tăng trưởng bền vững nhất. Thay vì đơn độc gánh vác mọi khâu từ kho bãi đến bán hàng, các liên minh 2-3 doanh nghiệp có thể cắt giảm tới 40% chi phí vận hành hàng tháng.',
+      title: `Radar Thị Trường: ${queryTopic} — Cơ hội tối ưu chi phí và liên minh chiến lược 2026`,
+      category: curPillarInfo.category,
+      categoryLabel: curPillarInfo.label,
+      pillar: activePillar as any,
+      summary: 'Dữ liệu thị trường cho thấy thời điểm thuận lợi để các doanh nghiệp vừa và nhỏ chia sẻ tài nguyên dư thừa và hợp tác đa kênh.',
+      content: 'Trong bối cảnh áp lực chi phí đầu vào và biến động chuỗi cung ứng, việc liên kết nguồn lực giữa các đối tác có năng lực bổ trợ là chiến lược tăng trưởng bền vững nhất. Thay vì đơn độc triển khai mọi khâu từ kho bãi đến thị trường, các liên minh 2-3 doanh nghiệp có thể cắt giảm tới 35-40% chi phí vận hành hàng tháng.',
       keyTakeaways: [
-        'Giảm thiểu áp lực vốn lưu động thông qua cơ chế hoán đổi và chia sẻ công suất máy móc/kho bãi.',
-        'Khai thác chéo tệp khách hàng trung thành của nhau với chi phí tiếp thị gần như bằng 0.',
-        'Ký kết thỏa thuận hợp tác thử nghiệm (Pilot 30 ngày) để đo lường tỷ lệ chuyển đổi trước khi rót ngân sách lớn.'
+        'Tối ưu dòng tiền và giảm áp lực vốn thông qua cơ chế hợp tác chia sẻ nguồn lực thực tế.',
+        'Mở rộng tệp đối tác tiềm năng mà không phải tốn ngân sách lớn vào quảng cáo dàn trải.',
+        'Đưa ngay các điều khoản hợp tác vào Phòng Giao Thương để kiểm tra tính khả thi và lập MOU nhanh chóng.'
       ],
-      actionableOpportunity: 'Khảo sát ngay các đơn vị có thế mạnh bổ trợ với bạn trên sàn J-Network để khởi tạo mô hình liên minh phân phối doanh thu ròng.',
+      actionableOpportunity: 'Khảo sát ngay các đơn vị có thế mạnh bổ trợ trên J-Network để khởi tạo mô hình liên minh cùng phát triển.',
+      suggestedActionType: 'deal_room',
+      suggestedActionLabel: 'Đàm Phán Hợp Tác Tại Deal Room',
       defaultDealPrompt: {
         partyAResources: 'Năng lực cốt lõi về sản phẩm và nguồn cung ổn định.',
-        partyBResources: 'Kênh phân phối hiện hữu và tệp khách hàng có nhu cầu cao.',
-        dealType: 'Liên minh phân phối & Chia sẻ doanh thu ròng (Revenue Share)',
-        targetGoal: 'Tiết kiệm 30% chi phí tiếp thị và gia tăng 50% doanh số trong 60 ngày.'
+        partyBResources: 'Kênh phân phối, mạng lưới khách hàng hoặc cơ sở hạ tầng.',
+        dealType: 'Liên minh hợp tác chiến lược & Chia sẻ doanh thu ròng',
+        targetGoal: 'Tiết kiệm 30% chi phí vận hành và tăng trưởng doanh số trong 60 ngày.'
       },
-      source: 'Hội đồng Cố vấn Doanh nghiệp J-Network',
-      sourceUrl: 'https://vcci.com.vn',
+      source: curPillarInfo.source,
+      sourceUrl: curPillarInfo.url,
       publishedAt: 'Hôm nay, vừa cập nhật',
       readTime: '3 phút đọc',
-      imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80',
+      imageUrl: curPillarInfo.img,
       isTrending: true,
       viewsCount: 320,
+      region: 'Toàn quốc',
     };
 
     return NextResponse.json({ success: true, data: fallbackInsight, source: 'heuristic-matrix' });
@@ -130,3 +228,4 @@ Trả về DUY NHẤT một chuỗi JSON hợp lệ (không kèm markdown thừa
     return NextResponse.json({ error: error?.message || 'Server error' }, { status: 500 });
   }
 }
+

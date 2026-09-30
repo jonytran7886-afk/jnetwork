@@ -19,6 +19,12 @@ import {
   Filter,
   Briefcase,
   Layers,
+  Compass,
+  MapPin,
+  Building2,
+  DollarSign,
+  Handshake,
+  FileCheck,
 } from 'lucide-react';
 import { IndustryInsightItem, INITIAL_INDUSTRY_INSIGHTS } from '../data/industryInsightsData';
 
@@ -50,17 +56,26 @@ export const IndustryInsightsSection: React.FC<IndustryInsightsSectionProps> = (
   const [aiGenerateSuccessMsg, setAiGenerateSuccessMsg] = useState<string | null>(null);
 
   const categories = [
-    { key: 'all', label: 'Tất cả tin tức' },
-    { key: 'funding_market', label: 'Dòng Vốn & Thị Trường' },
-    { key: 'supply_chain', label: 'Chuỗi Cung Ứng & Sản Xuất' },
-    { key: 'policy_tax', label: 'Chính Sách & Pháp Lý' },
-    { key: 'case_study', label: 'Bài Học Thực Chiến B2B' },
-    { key: 'tech_ai', label: 'AI & Chuyển Đổi Số' },
+    { key: 'all', label: 'Tất cả cơ hội' },
+    { key: 'trade', label: '🌐 Giao Thương & Xuất Khẩu' },
+    { key: 'investment', label: '💰 Đầu Tư & Dòng Vốn' },
+    { key: 'cooperation', label: '🤝 Hợp Tác & Nguồn Lực' },
+    { key: 'projects', label: '🏗️ Dự Án & Đấu Thầu' },
+    { key: 'policy_tax', label: '📋 Chính Sách & Pháp Lý' },
   ];
 
-  const handleGenerateAiInsight = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiCustomTopic.trim()) return;
+  const quickHotTopics = [
+    { label: 'Xuất khẩu nông sản chính ngạch', topic: 'Cơ hội xuất khẩu nông sản và trái cây sấy sang Trung Quốc và ASEAN' },
+    { label: 'Gói thầu phụ trợ KCN', topic: 'Dự án thầu phụ gia công cơ khí và bao bì cho nhà máy FDI' },
+    { label: 'Đầu tư nhượng quyền F&B', topic: 'Tìm nhà đầu tư hợp tác kinh doanh chuỗi F&B dòng tiền ổn định' },
+    { label: 'Chia sẻ kho xưởng nhàn rỗi', topic: 'Chia sẻ công suất nhà xưởng cơ khí và kho bãi logistics' },
+    { label: 'Điện mặt trời mái xưởng ESCO', topic: 'Hợp tác quỹ năng lượng lắp điện mặt trời áp mái 0 đồng vốn' },
+  ];
+
+  const handleGenerateAiInsight = async (e?: React.FormEvent, customQuery?: string) => {
+    if (e) e.preventDefault();
+    const query = (customQuery || aiCustomTopic).trim();
+    if (!query) return;
 
     setIsAiGenerating(true);
     setAiGenerateSuccessMsg(null);
@@ -70,8 +85,9 @@ export const IndustryInsightsSection: React.FC<IndustryInsightsSectionProps> = (
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          topic: aiCustomTopic.trim(),
-          industrySector: selectedCategory !== 'all' ? selectedCategory : 'Kinh doanh & Liên minh nguồn lực',
+          topic: query,
+          industrySector: selectedCategory !== 'all' ? selectedCategory : 'Giao thương, Đầu tư & Hợp tác B2B',
+          pillar: selectedCategory !== 'all' ? selectedCategory : 'trade',
         }),
       });
 
@@ -80,29 +96,35 @@ export const IndustryInsightsSection: React.FC<IndustryInsightsSectionProps> = (
         setInsights((prev) => [json.data, ...prev]);
         setSelectedModalInsight(json.data);
         setAiCustomTopic('');
-        setAiGenerateSuccessMsg('Đã tạo thành công bản phân tích nhịp đập thị trường mới!');
+        setAiGenerateSuccessMsg('Đã cập nhật bản phân tích cơ hội mới từ thị trường!');
         setTimeout(() => setAiGenerateSuccessMsg(null), 4000);
       }
     } catch (err) {
-      console.error('Lỗi tạo tin tức thị trường AI:', err);
+      console.error('Lỗi quét tin tức thị trường AI:', err);
     } finally {
       setIsAiGenerating(false);
     }
   };
 
+  const handleQuickChipClick = (topicText: string) => {
+    setAiCustomTopic(topicText);
+    handleGenerateAiInsight(undefined, topicText);
+  };
+
   const handleCopyInsight = (item: IndustryInsightItem) => {
     const text = `
-[BẢN TIN CHIẾN LƯỢC B2B — J-NETWORK]
+[BẢN TIN CƠ HỘI GIAO THƯƠNG & ĐẦU TƯ — J-NETWORK]
 Tiêu đề: ${item.title}
 Lĩnh vực: ${item.categoryLabel}
-Nguồn: ${item.source} (${item.publishedAt})
+Nguồn uy tín: ${item.source} (${item.publishedAt})
+Khu vực: ${item.region || 'Toàn quốc'}
 
 Tóm tắt lãnh đạo: ${item.summary}
 
 Điểm đúc kết then chốt:
-${item.keyTakeaways.map((t, idx) => `• ${t}`).join('\n')}
+${item.keyTakeaways.map((t) => `• ${t}`).join('\n')}
 
-Cơ hội hành động: ${item.actionableOpportunity}
+Cơ hội hợp tác thực tế: ${item.actionableOpportunity}
     `.trim();
 
     navigator.clipboard.writeText(text);
@@ -111,33 +133,44 @@ Cơ hội hành động: ${item.actionableOpportunity}
   };
 
   const filteredInsights = insights.filter((item) => {
-    const matchCategory = selectedCategory === 'all' || item.category === selectedCategory;
+    const matchCategory =
+      selectedCategory === 'all' ||
+      item.category === selectedCategory ||
+      (selectedCategory === 'trade' && (item.pillar === 'trade' || item.category === 'trade_commerce')) ||
+      (selectedCategory === 'investment' && (item.pillar === 'investment' || item.category === 'investment_capital' || item.category === 'funding_market')) ||
+      (selectedCategory === 'cooperation' && (item.pillar === 'cooperation' || item.category === 'b2b_cooperation' || item.category === 'case_study')) ||
+      (selectedCategory === 'projects' && (item.pillar === 'projects' || item.category === 'projects_tenders')) ||
+      (selectedCategory === 'policy_tax' && item.category === 'policy_tax');
+
     const matchSearch =
       !searchKeyword.trim() ||
       item.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
       item.summary.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-      item.categoryLabel.toLowerCase().includes(searchKeyword.toLowerCase());
+      item.categoryLabel.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      (item.actionableOpportunity && item.actionableOpportunity.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+      (item.region && item.region.toLowerCase().includes(searchKeyword.toLowerCase()));
+
     return matchCategory && matchSearch;
   });
 
   return (
     <section id="industry-insights" className="py-20 bg-slate-50 relative overflow-hidden border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
+        {/* Section Header: Optimized Wording */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF2D55] bg-rose-50 border border-rose-100 px-3 py-1 rounded-full mb-3 shadow-2xs">
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Trung Tâm Thông Tin Chiến Lược & Nhịp Đập Ngành</span>
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF2D55] bg-rose-50 border border-rose-100 px-3.5 py-1 rounded-full mb-3 shadow-2xs">
+            <Compass className="w-3.5 h-3.5 text-[#FF2D55]" />
+            <span>Dữ Liệu Thị Trường & Radar Cơ Hội B2B</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 mb-4">
-            Bản Tin & Xu Hướng Thị Trường B2B
+            Bản Tin Giao Thương & Cơ Hội Hợp Tác Thực Tế
           </h2>
           <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
-            Cung cấp thông tin thực chiến, chính sách mới và phân tích chuỗi cung ứng giúp doanh nghiệp nắm bắt cơ hội trước khi đối thủ hành động.
+            Cập nhật đa chiều về xuất nhập khẩu, dòng vốn đầu tư, gói thầu dự án và liên minh nguồn lực — giúp doanh nghiệp chủ động đón đầu xu thế, tối ưu chi phí và liên kết cùng phát triển.
           </p>
         </div>
 
-        {/* AI Custom Intelligence Generator Bar */}
+        {/* AI Custom Intelligence Generator Bar: Refined */}
         <div className="bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-xs mb-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 shrink-0">
@@ -146,29 +179,29 @@ Cơ hội hành động: ${item.actionableOpportunity}
               </div>
               <div>
                 <div className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                  <span>Trợ Lý Nghiên Cứu & Dự Báo Thị Trường AI</span>
-                  <span className="text-[10px] bg-rose-100 text-[#FF2D55] font-bold px-1.5 py-0.5 rounded">24/7</span>
+                  <span>Radar Quét Cơ Hội Giao Thương & Đầu Tư AI</span>
+                  <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded">Thời gian thực</span>
                 </div>
                 <div className="text-xs text-slate-500">
-                  Nhập ngành hoặc xu hướng bạn quan tâm để AI tổng hợp bản tin chuyên sâu trong 5 giây
+                  Khảo sát nhanh dữ liệu ngành, dự án đấu thầu và nhu cầu liên kết chuỗi giá trị
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleGenerateAiInsight} className="w-full md:w-auto flex-1 max-w-xl flex items-center gap-2">
+            <form onSubmit={(e) => handleGenerateAiInsight(e)} className="w-full md:w-auto flex-1 max-w-xl flex items-center gap-2">
               <div className="relative flex-1">
                 <input
                   type="text"
                   value={aiCustomTopic}
                   onChange={(e) => setAiCustomTopic(e.target.value)}
-                  placeholder="VD: Xu hướng logistics kho lạnh 2026, Ưu đãi thuế OCOP..."
+                  placeholder="Nhập ngành nghề hoặc cơ hội cần tìm (VD: Xuất khẩu sầu riêng, Thầu cơ khí, Nhượng quyền F&B...)"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-3.5 pr-8 py-2.5 text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                 />
                 {aiCustomTopic && (
                   <button
                     type="button"
                     onClick={() => setAiCustomTopic('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -182,29 +215,48 @@ Cơ hội hành động: ${item.actionableOpportunity}
                 {isAiGenerating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span className="hidden sm:inline">Đang phân tích...</span>
+                    <span className="hidden sm:inline">Đang quét...</span>
                   </>
                 ) : (
                   <>
                     <Zap className="w-4 h-4 text-amber-400" />
-                    <span>Phân tích</span>
+                    <span>Quét cơ hội</span>
                   </>
                 )}
               </button>
             </form>
           </div>
 
+          {/* Quick Hot Topic Chips */}
+          <div className="mt-3.5 pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap text-xs">
+            <span className="text-slate-500 font-medium shrink-0 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3 text-[#FF2D55]" />
+              <span>Gợi ý quét nhanh:</span>
+            </span>
+            {quickHotTopics.map((chip, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleQuickChipClick(chip.topic)}
+                disabled={isAiGenerating}
+                className="text-[11px] bg-slate-100 hover:bg-rose-50 hover:text-[#FF2D55] text-slate-600 px-2.5 py-1 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+
           {aiGenerateSuccessMsg && (
             <div className="mt-3 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{aiGenerateSuccessMsg}</span>
             </div>
           )}
         </div>
 
-        {/* Filter and Search Controls */}
+        {/* Filter and Search Controls: 4 Pillars */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          {/* Category Tabs */}
+          {/* Category Tabs: 4 Pillars */}
           <div className="flex flex-wrap items-center gap-2">
             {categories.map((cat) => (
               <button
@@ -228,7 +280,7 @@ Cơ hội hành động: ${item.actionableOpportunity}
               type="text"
               value={searchKeyword}
               onChange={(e) => setSearchKeyword(e.target.value)}
-              placeholder="Tìm kiếm bản tin..."
+              placeholder="Tìm kiếm cơ hội, vùng miền..."
               className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#FF2D55]"
             />
           </div>
@@ -252,14 +304,22 @@ Cơ hội hành động: ${item.actionableOpportunity}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
 
                   {/* Badges on image */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-900/80 backdrop-blur-md text-white border border-white/20">
-                      {item.categoryLabel}
-                    </span>
-                    {item.isTrending && (
-                      <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-[#FF2D55] text-white flex items-center gap-1 shadow-2xs">
-                        <TrendingUp className="w-3 h-3" />
-                        <span>Nổi bật</span>
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-900/80 backdrop-blur-md text-white border border-white/20">
+                        {item.categoryLabel}
+                      </span>
+                      {item.isTrending && (
+                        <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-[#FF2D55] text-white flex items-center gap-1 shadow-2xs">
+                          <TrendingUp className="w-3 h-3" />
+                          <span>Nổi bật</span>
+                        </span>
+                      )}
+                    </div>
+                    {item.region && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white/95 backdrop-blur-md text-slate-800 flex items-center gap-1 border border-white/40 shadow-2xs">
+                        <MapPin className="w-2.5 h-2.5 text-[#FF2D55]" />
+                        <span>{item.region}</span>
                       </span>
                     )}
                   </div>
@@ -414,6 +474,12 @@ Cơ hội hành động: ${item.actionableOpportunity}
               <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-rose-50 text-[#FF2D55] border border-rose-200">
                 {selectedModalInsight.categoryLabel}
               </span>
+              {selectedModalInsight.region && (
+                <span className="text-xs font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 flex items-center gap-1 border border-slate-200">
+                  <MapPin className="w-3 h-3 text-[#FF2D55]" />
+                  <span>{selectedModalInsight.region}</span>
+                </span>
+              )}
               <span className="text-xs text-slate-500 flex items-center gap-1">
                 <span>Nguồn:</span>
                 {selectedModalInsight.sourceUrl ? (
