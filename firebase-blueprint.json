@@ -149,6 +149,30 @@
         "update": "true",
         "delete": "true"
       }
+    },
+    "BusinessCard": {
+      "collection": "business_cards",
+      "fields": {
+        "uid": { "type": "string", "description": "UID thành viên sở hữu danh thiếp" },
+        "fullName": { "type": "string", "description": "Họ và tên" },
+        "position": { "type": "string", "description": "Chức vụ" },
+        "company": { "type": "string", "description": "Tên doanh nghiệp" },
+        "phone": { "type": "string", "description": "Số điện thoại" },
+        "zaloPhone": { "type": "string", "description": "Số Zalo" },
+        "email": { "type": "string", "description": "Email" },
+        "industry": { "type": "string", "description": "Ngành nghề" },
+        "location": { "type": "string", "description": "Địa chỉ / Tỉnh thành" },
+        "coreStrengths": { "type": "string", "description": "Thế mạnh cốt lõi" },
+        "needs": { "type": "string", "description": "Nhu cầu hợp tác" },
+        "website": { "type": "string", "description": "Website hoặc liên kết mạng xã hội" },
+        "updatedAt": { "type": "string", "description": "Thời gian cập nhật" }
+      },
+      "rules": {
+        "read": "true",
+        "create": "true",
+        "update": "true",
+        "delete": "true"
+      }
     }
   }
 }

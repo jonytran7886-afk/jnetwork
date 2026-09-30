@@ -1,7 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, User as UserIcon, Plus, Bell, MessageSquare, FolderKanban, Inbox, Contact, QrCode } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Menu,
+  X,
+  LogOut,
+  User as UserIcon,
+  Plus,
+  Bell,
+  MessageSquare,
+  FolderKanban,
+  Inbox,
+  Contact,
+  QrCode,
+  ChevronDown,
+  Edit3,
+  Eye,
+  Sparkles,
+  ExternalLink,
+} from 'lucide-react';
 import { auth, signOutUser, db } from '../lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
@@ -14,7 +31,7 @@ interface NavbarProps {
   onLogout?: () => void;
   onOpenMemberHub?: (tab?: 'opportunities' | 'invitations' | 'messages') => void;
   onOpenPostDemand?: () => void;
-  onOpenRolodex?: () => void;
+  onOpenRolodex?: (tab?: 'contacts' | 'ai_parser' | 'my_card' | 'vault', startEditingCard?: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -27,8 +44,21 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenRolodex,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [pendingInvCount, setPendingInvCount] = useState<number>(0);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -155,33 +185,196 @@ export const Navbar: React.FC<NavbarProps> = ({
                 )}
               </button>
 
-              {/* User Profile Badge */}
-              <div
-                onClick={() => onOpenMemberHub && onOpenMemberHub('opportunities')}
-                className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-2.5 py-1.5 cursor-pointer transition-colors"
-                title="Bấm để mở Bảng điều khiển thành viên"
-              >
-                <div className="w-7 h-7 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
-                  {currentUser?.photoURL ? (
-                    <img src={currentUser.photoURL} alt={displayName} className="w-full h-full object-cover" />
-                  ) : (
-                    <UserIcon className="w-3.5 h-3.5 text-[#FF2D55]" />
-                  )}
-                </div>
-                <span className="text-xs font-bold text-slate-900 truncate max-w-[85px] xl:max-w-[110px] hidden md:inline-block">
-                  {displayName}
-                </span>
+              {/* User Profile Badge with Rich Dropdown Menu */}
+              <div className="relative" ref={profileDropdownRef}>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSignOut();
-                  }}
-                  title="Đăng xuất"
-                  className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 rounded-xl px-2.5 py-1.5 cursor-pointer transition-all active:scale-98"
+                  title="Menu tài khoản & Thiết lập Card ID"
+                  aria-expanded={profileDropdownOpen}
                 >
-                  <LogOut className="w-3.5 h-3.5" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-rose-100 border border-rose-200 flex items-center justify-center shrink-0">
+                    {currentUser?.photoURL ? (
+                      <img src={currentUser.photoURL} alt={displayName || 'User'} className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-3.5 h-3.5 text-[#FF2D55]" />
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-slate-900 truncate max-w-[85px] xl:max-w-[110px] hidden md:inline-block">
+                    {displayName}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180 text-[#FF2D55]' : ''}`} />
                 </button>
+
+                {/* Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-3xl shadow-2xl border border-slate-200/90 py-3 z-50 animate-in fade-in slide-in-from-top-2 overflow-hidden text-left">
+                    
+                    {/* User Identity Header */}
+                    <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/70">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#FF2D55] to-amber-500 text-white flex items-center justify-center font-black text-sm shadow-md shrink-0">
+                          {displayName ? displayName.charAt(0).toUpperCase() : 'J'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-black text-slate-900 truncate">{displayName}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                              Active Member
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono truncate">
+                              ID: {currentUser?.uid ? currentUser.uid.slice(0, 8) : 'member'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* FEATURE GROUP 1: CARD ID & DANH THIẾP SỐ */}
+                    <div className="p-2 border-b border-slate-100 space-y-1">
+                      <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-rose-500 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>Danh Thiếp Số B2B &amp; Card ID</span>
+                      </div>
+
+                      {/* 1. Thiết Lập Danh Thiếp Số */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (onOpenRolodex) onOpenRolodex('my_card', true);
+                        }}
+                        className="w-full px-3 py-2.5 rounded-xl hover:bg-rose-50/80 text-left transition-colors flex items-center gap-3 group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-rose-100 text-[#FF2D55] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Edit3 className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-900 group-hover:text-[#FF2D55] transition-colors">
+                            Thiết Lập Danh Thiếp &amp; Card ID
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            Cập nhật SĐT, Zalo, chức vụ, công ty &amp; mã QR
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* 2. Xem Trang Card ID Online */}
+                      <a
+                        href={`/card/${currentUser?.uid || 'member'}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setProfileDropdownOpen(false)}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-slate-50 text-left transition-colors flex items-center gap-3 group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Eye className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                            <span>Xem Trang Card ID Online</span>
+                            <ExternalLink className="w-3 h-3 text-slate-400" />
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            Mở trang thực tế đối tác quét mã QR
+                          </p>
+                        </div>
+                      </a>
+
+                      {/* 3. Sổ Danh Bạ Đối Tác (B2B Rolodex) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (onOpenRolodex) onOpenRolodex('contacts');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-slate-50 text-left transition-colors flex items-center gap-3 group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Contact className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800">
+                            Sổ Danh Bạ Đối Tác (B2B Rolodex)
+                          </p>
+                          <p className="text-[11px] text-slate-500 truncate">
+                            Lưu vĩnh viễn, bóc tách tin nhắn Zalo bằng AI
+                          </p>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* FEATURE GROUP 2: MEMBER WORKSPACE HUB */}
+                    <div className="p-2 border-b border-slate-100 space-y-0.5">
+                      <div className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Bảng Điều Khiển Thành Viên
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (onOpenMemberHub) onOpenMemberHub('opportunities');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-slate-50 text-left transition-colors flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <FolderKanban className="w-4 h-4 text-slate-500" />
+                          <span>Cơ hội &amp; Nguồn lực của tôi</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (onOpenMemberHub) onOpenMemberHub('invitations');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-slate-50 text-left transition-colors flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Inbox className="w-4 h-4 text-slate-500" />
+                          <span>Lời mời kết nối &amp; Đàm phán</span>
+                        </div>
+                        {pendingInvCount > 0 && (
+                          <span className="px-1.5 py-0.5 bg-[#FF2D55] text-white text-[10px] font-bold rounded-full">
+                            {pendingInvCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          if (onOpenMemberHub) onOpenMemberHub('messages');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-slate-50 text-left transition-colors flex items-center justify-between text-xs font-semibold text-slate-700 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <MessageSquare className="w-4 h-4 text-slate-500" />
+                          <span>Tin nhắn trực tiếp</span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* FEATURE GROUP 3: SIGN OUT */}
+                    <div className="p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          handleSignOut();
+                        }}
+                        className="w-full px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-600 text-xs font-bold transition-colors flex items-center gap-2.5 cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Đăng xuất tài khoản</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -297,6 +490,32 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
                     <p className="text-xs text-emerald-600 font-medium">Thành viên J-Network</p>
                   </div>
+                </div>
+
+                {/* Mobile Card ID Quick Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-1 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      if (onOpenRolodex) onOpenRolodex('my_card', true);
+                    }}
+                    className="p-2.5 text-left bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-[#FF2D55] flex items-center gap-2 cursor-pointer"
+                  >
+                    <Edit3 className="w-4 h-4 text-[#FF2D55] shrink-0" />
+                    <span className="truncate">Sửa Card ID &amp; QR</span>
+                  </button>
+
+                  <a
+                    href={`/card/${currentUser?.uid || 'member'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 text-left bg-slate-900 border border-slate-800 rounded-xl text-xs font-bold text-white flex items-center gap-2 cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span className="truncate">Xem Card Online</span>
+                  </a>
                 </div>
 
                 <div className="grid grid-cols-3 gap-1.5 pt-1">

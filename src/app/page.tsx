@@ -58,7 +58,15 @@ export default function HomePage() {
   const [activeDetailItem, setActiveDetailItem] = useState<OpportunityItem | null>(null);
   const [isPostDemandOpen, setIsPostDemandOpen] = useState<boolean>(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState<boolean>(false);
-  const [isRolodexOpen, setIsRolodexOpen] = useState<boolean>(false);
+  const [rolodexModalState, setRolodexModalState] = useState<{
+    isOpen: boolean;
+    tab: 'contacts' | 'ai_parser' | 'my_card' | 'vault';
+    startEditingCard?: boolean;
+  }>({
+    isOpen: false,
+    tab: 'contacts',
+    startEditingCard: false,
+  });
   const [authModalState, setAuthModalState] = useState<{ isOpen: boolean; mode: 'login' | 'register' }>({
     isOpen: false,
     mode: 'register',
@@ -219,13 +227,16 @@ export default function HomePage() {
   };
 
   // Handler strictly enforcing mandatory authentication before opening Rolodex (tied to each user)
-  const handleOpenRolodexSafe = () => {
+  const handleOpenRolodexSafe = (
+    tab: 'contacts' | 'ai_parser' | 'my_card' | 'vault' = 'contacts',
+    startEditingCard: boolean = false
+  ) => {
     if (!firebaseUser && !loggedInUser) {
       showToast('Tính năng Sổ Danh Bạ & Danh Thiếp B2B bắt buộc đăng nhập vì quản lý theo từng người dùng.');
       setAuthModalState({ isOpen: true, mode: 'login' });
       return;
     }
-    setIsRolodexOpen(true);
+    setRolodexModalState({ isOpen: true, tab, startEditingCard });
   };
 
   // Add new opportunity
@@ -502,8 +513,10 @@ export default function HomePage() {
 
       {/* 7. Business Rolodex & B2B Dynamic Digital Card Modal */}
       <BusinessRolodexModal
-        isOpen={isRolodexOpen}
-        onClose={() => setIsRolodexOpen(false)}
+        isOpen={rolodexModalState.isOpen}
+        initialTab={rolodexModalState.tab}
+        startEditingCard={rolodexModalState.startEditingCard}
+        onClose={() => setRolodexModalState((prev) => ({ ...prev, isOpen: false, startEditingCard: false }))}
         currentUser={
           firebaseUser
             ? {
@@ -521,7 +534,7 @@ export default function HomePage() {
             : null
         }
         onRequireAuth={() => {
-          setIsRolodexOpen(false);
+          setRolodexModalState((prev) => ({ ...prev, isOpen: false }));
           setAuthModalState({ isOpen: true, mode: 'login' });
         }}
         onOpenDealRoomWithPrompt={(prompt) => {

@@ -31,6 +31,10 @@ import {
   RefreshCw,
   Contact,
   Lock,
+  Edit3,
+  Globe,
+  Smartphone,
+  Eye,
 } from 'lucide-react';
 import {
   BusinessContactItem,
@@ -39,7 +43,19 @@ import {
   downloadVCard,
 } from '../data/businessContactsData';
 import { db } from '../lib/firebase';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc,
+} from 'firebase/firestore';
+import QRCode from 'qrcode';
 
 interface BusinessRolodexModalProps {
   isOpen: boolean;
@@ -50,6 +66,8 @@ interface BusinessRolodexModalProps {
     email: string;
     photoURL?: string;
   } | null;
+  initialTab?: 'contacts' | 'ai_parser' | 'my_card' | 'vault';
+  startEditingCard?: boolean;
   onRequireAuth?: () => void;
   onOpenDealRoomWithPrompt?: (prompt: {
     partyAResources: string;
@@ -63,14 +81,30 @@ export const BusinessRolodexModal: React.FC<BusinessRolodexModalProps> = ({
   isOpen,
   onClose,
   currentUser,
+  initialTab = 'contacts',
+  startEditingCard = false,
   onRequireAuth,
   onOpenDealRoomWithPrompt,
 }) => {
   const [contacts, setContacts] = useState<BusinessContactItem[]>([]);
-  const [activeTab, setActiveTab] = useState<'contacts' | 'ai_parser' | 'my_card' | 'vault'>('contacts');
+  const [activeTab, setActiveTab] = useState<'contacts' | 'ai_parser' | 'my_card' | 'vault'>(initialTab);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('all');
   const [selectedContact, setSelectedContact] = useState<BusinessContactItem | null>(null);
+
+  // Sync initial tab when passed
+  useEffect(() => {
+    if (initialTab && isOpen) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab, isOpen]);
+
+  // Sync start editing card mode
+  useEffect(() => {
+    if (startEditingCard && isOpen) {
+      setIsEditingCard(true);
+    }
+  }, [startEditingCard, isOpen]);
 
   // AI Parser State
   const [pastedText, setPastedText] = useState<string>('');
@@ -101,6 +135,194 @@ export const BusinessRolodexModal: React.FC<BusinessRolodexModalProps> = ({
     needs: '',
     meetingContext: '',
   });
+
+  // User's own Digital Card Profile state
+  const [cardProfile, setCardProfile] = useState({
+    fullName: currentUser?.displayName || 'Thành Viên J-Network',
+    position: 'Chủ Doanh Nghiệp / Đối Tác Kết Nối',
+    company: 'Doanh Nghiệp Độc Lập',
+    phone: '0901234567',
+    zaloPhone: '0901234567',
+    email: currentUser?.email || '',
+    industry: 'Thương mại & Dịch vụ B2B',
+    location: 'Việt Nam',
+    coreStrengths: 'Cung ứng nguồn lực, kết nối mở rộng thị trường và tìm kiếm cơ hội kinh doanh mới.',
+    needs: 'Tìm đối tác đồng hành chia sẻ doanh thu và mở rộng hệ sinh thái.',
+    website: '',
+  });
+
+  const [isEditingCard, setIsEditingCard] = useState<boolean>(false);
+  const [editCardForm, setEditCardForm] = useState({ ...cardProfile });
+  const [qrMode, setQrMode] = useState<'url' | 'vcard'>('url');
+  const [realQrDataUrl, setRealQrDataUrl] = useState<string>('');
+  const [isSavingCard, setIsSavingCard] = useState<boolean>(false);
+
+  // Load user's digital card profile from localStorage and Firestore
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const cardKey = `jnetwork_my_card_${currentUser.uid}`;
+    const saved = localStorage.getItem(cardKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setCardProfile(parsed);
+        setEditCardForm(parsed);
+      } catch (e) {
+        console.warn(e);
+      }
+    } else {
+      const initial = {
+        fullName: currentUser.displayName || 'Thành Viên J-Network',
+        position: 'Chủ Doanh Nghiệp / Đối Tác Kết Nối',
+        company: 'Doanh Nghiệp Độc Lập',
+        phone: '0901234567',
+        zaloPhone: '0901234567',
+        email: currentUser.email || '',
+        industry: 'Thương mại & Dịch vụ B2B',
+        location: 'Việt Nam',
+        coreStrengths: 'Cung ứng nguồn lực, kết nối mở rộng thị trường và tìm kiếm cơ hội kinh doanh mới.',
+        needs: 'Tìm đối tác đồng hành chia sẻ doanh thu và mở rộng hệ sinh thái.',
+        website: '',
+      };
+      setCardProfile(initial);
+      setEditCardForm(initial);
+    }
+
+    const fetchCardFromDb = async () => {
+      try {
+        const cardRef = doc(db, 'business_cards', currentUser.uid);
+        const cardSnap = await getDoc(cardRef);
+        if (cardSnap.exists()) {
+          const data = cardSnap.data() as any;
+          setCardProfile(data);
+          setEditCardForm(data);
+          localStorage.setItem(cardKey, JSON.stringify(data));
+        }
+      } catch (err) {
+        console.warn('Load card from firestore error:', err);
+      }
+    };
+
+    fetchCardFromDb();
+  }, [currentUser?.uid, currentUser?.displayName, currentUser?.email]);
+
+  // Generate real, 100% scannable QR Code using qrcode library
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://jnetwork.vn';
+    const cardUrl = `${origin}/card/${currentUser.uid}`;
+
+    let qrTarget = cardUrl;
+    if (qrMode === 'vcard') {
+      const cleanPhone = (cardProfile.phone || '').replace(/[^0-9+]/g, '');
+      qrTarget = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        `FN;CHARSET=UTF-8:${cardProfile.fullName}`,
+        `N;CHARSET=UTF-8:${cardProfile.fullName};;;;`,
+        `ORG;CHARSET=UTF-8:${cardProfile.company}`,
+        `TITLE;CHARSET=UTF-8:${cardProfile.position}`,
+        `TEL;TYPE=CELL,VOICE:${cleanPhone}`,
+        `EMAIL;TYPE=PREF,INTERNET:${cardProfile.email || ''}`,
+        `ADR;TYPE=WORK;CHARSET=UTF-8:;;;${cardProfile.location || 'Việt Nam'};;;`,
+        `NOTE;CHARSET=UTF-8:Thế mạnh: ${cardProfile.coreStrengths || ''} (J-Network B2B Rolodex)`,
+        'END:VCARD',
+      ].join('\r\n');
+    }
+
+    QRCode.toDataURL(qrTarget, {
+      width: 340,
+      margin: 1,
+      color: { dark: '#0f172a', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url) => setRealQrDataUrl(url))
+      .catch((err) => console.warn('QR generation error:', err));
+  }, [currentUser?.uid, qrMode, cardProfile]);
+
+  const handleSaveCardProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser?.uid) return;
+    setIsSavingCard(true);
+    try {
+      const updated = {
+        ...editCardForm,
+        uid: currentUser.uid,
+        updatedAt: new Date().toISOString(),
+      };
+      setCardProfile(updated);
+      localStorage.setItem(`jnetwork_my_card_${currentUser.uid}`, JSON.stringify(updated));
+
+      await setDoc(doc(db, 'business_cards', currentUser.uid), updated);
+      setIsEditingCard(false);
+      showToast('Đã lưu và cập nhật danh thiếp số của bạn thành công!');
+    } catch (err) {
+      console.warn('Save card error:', err);
+      setIsEditingCard(false);
+      showToast('Đã lưu danh thiếp số vào máy của bạn!');
+    } finally {
+      setIsSavingCard(false);
+    }
+  };
+
+  const handleDownloadQrPng = () => {
+    if (!realQrDataUrl) return;
+    const link = document.createElement('a');
+    link.href = realQrDataUrl;
+    link.download = `QR_DanhThiep_${cardProfile.fullName.replace(/\s+/g, '_')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Đã tải ảnh mã QR (.png) về máy!');
+  };
+
+  const handleDownloadMyVCard = () => {
+    const cleanPhone = (cardProfile.phone || '').replace(/[^0-9+]/g, '');
+    const vCardContent = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      `FN;CHARSET=UTF-8:${cardProfile.fullName}`,
+      `N;CHARSET=UTF-8:${cardProfile.fullName};;;;`,
+      `ORG;CHARSET=UTF-8:${cardProfile.company}`,
+      `TITLE;CHARSET=UTF-8:${cardProfile.position}`,
+      `TEL;TYPE=CELL,VOICE:${cleanPhone}`,
+      `EMAIL;TYPE=PREF,INTERNET:${cardProfile.email || ''}`,
+      `ADR;TYPE=WORK;CHARSET=UTF-8:;;;${cardProfile.location || 'Việt Nam'};;;`,
+      `NOTE;CHARSET=UTF-8:Thế mạnh: ${cardProfile.coreStrengths || ''} (J-Network B2B Rolodex)`,
+      'END:VCARD',
+    ].join('\r\n');
+
+    const blob = new Blob([vCardContent], { type: 'text/vcard;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${cardProfile.fullName.replace(/\s+/g, '_')}_contact.vcf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Đã tải file vCard (.vcf) lưu vào danh bạ điện thoại!');
+  };
+
+  const handleShareCard = async () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://jnetwork.vn';
+    const cardUrl = `${origin}/card/${currentUser?.uid || 'member'}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Danh thiếp số: ${cardProfile.fullName}`,
+          text: `Liên hệ hợp tác kinh doanh với ${cardProfile.fullName} (${cardProfile.company}) trên J-Network:`,
+          url: cardUrl,
+        });
+      } catch (e) {
+        navigator.clipboard.writeText(cardUrl);
+        showToast('Đã sao chép liên kết danh thiếp!');
+      }
+    } else {
+      navigator.clipboard.writeText(cardUrl);
+      showToast('Đã sao chép liên kết danh thiếp vào bộ nhớ tạm!');
+    }
+  };
 
   // User-specific storage key to isolate contacts per individual account
   const userStorageKey = currentUser?.uid ? `jnetwork_contacts_${currentUser.uid}` : null;
@@ -1079,27 +1301,230 @@ Ví dụ:
 
           {/* TAB 3: DYNAMIC DIGITAL CARD & QR */}
           {activeTab === 'my_card' && (
-            <div className="max-w-xl mx-auto space-y-6">
-              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-700 relative overflow-hidden">
+            <div className="max-w-2xl mx-auto space-y-6">
+              
+              {/* Header Action Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs">
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-[#FF2D55]" />
+                    <span>Danh Thiếp Số B2B &amp; Mã QR Thông Minh</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Quét lưu danh bạ 1 chạm, chia sẻ hồ sơ đối tác trực tuyến không cần in giấy.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditCardForm({ ...cardProfile });
+                      setIsEditingCard(!isEditingCard);
+                    }}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-[#FF2D55]" />
+                    <span>{isEditingCard ? 'Hủy Sửa' : 'Sửa Thông Tin'}</span>
+                  </button>
+                  <a
+                    href={`/card/${currentUser?.uid || 'member'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-slate-900 hover:bg-[#FF2D55] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Xem Trang Online</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* CARD PROFILE EDIT FORM */}
+              {isEditingCard && (
+                <div className="bg-white border-2 border-[#FF2D55]/30 rounded-3xl p-6 shadow-md animate-in slide-in-from-top-2 space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <Edit3 className="w-4 h-4 text-[#FF2D55]" />
+                      <h4 className="text-sm font-black text-slate-900">Cập Nhật Thông Tin Danh Thiếp Số</h4>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-400">Đồng bộ tự động vào mã QR</span>
+                  </div>
+
+                  <form onSubmit={handleSaveCardProfile} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Họ và Tên <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={editCardForm.fullName}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, fullName: e.target.value })}
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Chức Vụ / Vị Trí
+                        </label>
+                        <input
+                          type="text"
+                          value={editCardForm.position}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, position: e.target.value })}
+                          placeholder="VD: Tổng Giám Đốc, Giám Đốc Vận Hành"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Tên Doanh Nghiệp / Cơ Sở
+                        </label>
+                        <input
+                          type="text"
+                          value={editCardForm.company}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, company: e.target.value })}
+                          placeholder="VD: Công ty TNHH Giải Pháp Nam Hà"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Số Điện Thoại Liên Hệ <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          value={editCardForm.phone}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, phone: e.target.value })}
+                          placeholder="VD: 0987654321"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Số Zalo
+                        </label>
+                        <input
+                          type="tel"
+                          value={editCardForm.zaloPhone}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, zaloPhone: e.target.value })}
+                          placeholder="Để trống nếu trùng SĐT"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Email Kinh Doanh
+                        </label>
+                        <input
+                          type="email"
+                          value={editCardForm.email}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, email: e.target.value })}
+                          placeholder="VD: ceo@doanhnghiep.vn"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Ngành Nghề Hoạt Động
+                        </label>
+                        <input
+                          type="text"
+                          value={editCardForm.industry}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, industry: e.target.value })}
+                          placeholder="VD: Nông sản, Logistics, Xây dựng"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Khu Vực / Tỉnh Thành
+                        </label>
+                        <input
+                          type="text"
+                          value={editCardForm.location}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, location: e.target.value })}
+                          placeholder="VD: TP. Hồ Chí Minh, Hà Nội, Toàn quốc"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Năng Lực &amp; Thế Mạnh Cốt Lõi
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={editCardForm.coreStrengths}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, coreStrengths: e.target.value })}
+                          placeholder="Mô tả nguồn lực, quy mô, xưởng sản xuất hoặc dịch vụ tiêu biểu..."
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Nhu Cầu Tìm Kiếm Hợp Tác
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={editCardForm.needs}
+                          onChange={(e) => setEditCardForm({ ...editCardForm, needs: e.target.value })}
+                          placeholder="Bạn đang cần tìm đối tác nào? (VD: Cần tìm nhà phân phối, cần mặt bằng...)"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs focus:bg-white focus:border-[#FF2D55] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingCard(false)}
+                        className="px-4 py-2 border border-slate-200 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-100"
+                      >
+                        Hủy Bỏ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingCard}
+                        className="px-5 py-2 bg-gradient-to-r from-[#FF2D55] to-[#E01E45] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>{isSavingCard ? 'Đang lưu...' : 'Lưu Cập Nhật Danh Thiếp'}</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* DIGITAL CARD PREVIEW (High-Tech VIP Card) */}
+              <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-xl border border-slate-700 relative overflow-hidden">
                 <div className="absolute -right-10 -bottom-10 w-44 h-44 bg-[#FF2D55]/20 rounded-full blur-2xl" />
 
                 {/* Card Top */}
                 <div className="flex items-start justify-between gap-4 mb-6">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF2D55] to-amber-500 text-white flex items-center justify-center font-black text-xl shadow-lg">
-                      {currentUser?.displayName ? currentUser.displayName.charAt(0) : 'J'}
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-[#FF2D55] to-amber-500 text-white flex items-center justify-center font-black text-xl shadow-lg shrink-0">
+                      {cardProfile.fullName ? cardProfile.fullName.charAt(0).toUpperCase() : 'J'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-lg font-bold text-white">
-                          {currentUser?.displayName || 'Thành Viên J-Network'}
+                          {cardProfile.fullName}
                         </h4>
                         <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">
-                          Active
+                          Xác Thực
                         </span>
                       </div>
-                      <div className="text-xs text-slate-300">Chủ Doanh Nghiệp / Đối Tác Kết Nối</div>
-                      <div className="text-[11px] text-slate-400">J-Network ID: {currentUser?.uid?.slice(0, 10) || 'member-888'}</div>
+                      <div className="text-xs text-rose-400 font-semibold">{cardProfile.position}</div>
+                      <div className="text-xs text-slate-300 font-medium">{cardProfile.company}</div>
                     </div>
                   </div>
 
@@ -1109,60 +1534,128 @@ Ví dụ:
                   </div>
                 </div>
 
-                {/* QR Code Demonstration Box */}
-                <div className="bg-white rounded-2xl p-5 text-center text-slate-900 shadow-md mb-6 flex flex-col sm:flex-row items-center gap-5 justify-between">
-                  <div className="w-32 h-32 bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-center shrink-0">
-                    {/* Visual QR Code Pattern */}
-                    <svg viewBox="0 0 100 100" className="w-full h-full text-slate-900">
-                      <rect width="100" height="100" fill="white" />
-                      {/* 3 Corner Markers */}
-                      <rect x="10" y="10" width="25" height="25" fill="#1e293b" />
-                      <rect x="15" y="15" width="15" height="15" fill="white" />
-                      <rect x="18" y="18" width="9" height="9" fill="#FF2D55" />
-
-                      <rect x="65" y="10" width="25" height="25" fill="#1e293b" />
-                      <rect x="70" y="15" width="15" height="15" fill="white" />
-                      <rect x="73" y="18" width="9" height="9" fill="#FF2D55" />
-
-                      <rect x="10" y="65" width="25" height="25" fill="#1e293b" />
-                      <rect x="15" y="70" width="15" height="15" fill="white" />
-                      <rect x="18" y="73" width="9" height="9" fill="#FF2D55" />
-
-                      {/* Random Data Dots */}
-                      <rect x="42" y="12" width="6" height="6" fill="#1e293b" />
-                      <rect x="52" y="18" width="6" height="6" fill="#1e293b" />
-                      <rect x="45" y="45" width="12" height="12" fill="#FF2D55" />
-                      <rect x="25" y="45" width="6" height="6" fill="#1e293b" />
-                      <rect x="65" y="45" width="8" height="8" fill="#1e293b" />
-                      <rect x="45" y="65" width="8" height="8" fill="#1e293b" />
-                      <rect x="65" y="70" width="6" height="6" fill="#1e293b" />
-                      <rect x="78" y="78" width="8" height="8" fill="#1e293b" />
-                    </svg>
+                {/* REAL DYNAMIC QR CODE DISPLAY BOX */}
+                <div className="bg-white rounded-2xl p-5 text-center text-slate-900 shadow-md mb-5">
+                  
+                  {/* Mode Selector Tabs */}
+                  <div className="flex items-center justify-center gap-1.5 p-1 bg-slate-100 rounded-xl mb-4 max-w-sm mx-auto">
+                    <button
+                      type="button"
+                      onClick={() => setQrMode('url')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        qrMode === 'url'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Mở Trang Web Online
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setQrMode('vcard')}
+                      className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        qrMode === 'vcard'
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Lưu Thẳng Danh Bạ (vCard)
+                    </button>
                   </div>
 
-                  <div className="text-left flex-1">
-                    <div className="text-sm font-bold text-slate-900 mb-1">Mã QR Danh Thiếp Động</div>
-                    <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                      Đối tác chỉ cần mở camera điện thoại quét mã này là lưu toàn bộ thông tin của bạn vào máy.
-                      Khi bạn cập nhật số điện thoại hay địa chỉ, danh thiếp của bạn bên máy họ tự động cập nhật!
-                    </p>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(
-                          `https://jnetwork.ai.studio/card/${currentUser?.uid || 'member'}`
-                        );
-                        showToast('Đã sao chép link danh thiếp số của bạn!');
-                      }}
-                      className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Sao chép liên kết danh thiếp</span>
-                    </button>
+                  <div className="flex flex-col sm:flex-row items-center gap-5 justify-between">
+                    {/* Real Scannable QR Image */}
+                    <div className="w-36 h-36 bg-slate-50 border-2 border-slate-200 rounded-2xl p-2 flex items-center justify-center shrink-0 shadow-inner">
+                      {realQrDataUrl ? (
+                        <img
+                          src={realQrDataUrl}
+                          alt={`QR Code của ${cardProfile.fullName}`}
+                          className="w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 border-2 border-[#FF2D55] border-t-transparent rounded-full animate-spin" />
+                      )}
+                    </div>
+
+                    <div className="text-left flex-1 space-y-2">
+                      <div className="text-sm font-bold text-slate-900">
+                        {qrMode === 'url'
+                          ? 'Mã QR Mở Trang Danh Thiếp Online'
+                          : 'Mã QR Quét Lưu Trực Tiếp Vào Điện Thoại'}
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {qrMode === 'url'
+                          ? 'Khi đối tác dùng camera điện thoại hoặc Zalo quét mã này, trang danh thiếp chuyên nghiệp của bạn sẽ mở ra ngay với đầy đủ hồ sơ năng lực và các nút gọi điện, nhắn tin.'
+                          : 'Khi đối tác quét mã này bằng Camera iPhone hoặc Android, máy sẽ hiện ngay thông báo "Tạo Liên Hệ Mới" để lưu họ tên, SĐT và chức vụ vào danh bạ mà không cần mạng.'}
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleShareCard}
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-[#FF2D55] text-white text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>Sao chép / Chia sẻ</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleDownloadQrPng}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                          title="Tải ảnh QR về in lên card giấy, banner hoặc lưu vào máy"
+                        >
+                          <Download className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Tải ảnh QR (.png)</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="text-xs text-slate-400 flex items-center justify-between">
-                  <span>Hỗ trợ iOS Contact & Google Contacts</span>
+                {/* Self vCard Download & Info Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-4">
+                  <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3 flex items-center gap-2.5">
+                    <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <div>
+                      <div className="text-[10px] text-slate-400">Số Điện Thoại &amp; Zalo:</div>
+                      <div className="font-bold text-white font-mono">{cardProfile.phone || 'Chưa cập nhật'}</div>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/60 border border-slate-700/60 rounded-xl p-3 flex items-center gap-2.5">
+                    <Mail className="w-4 h-4 text-blue-400 shrink-0" />
+                    <div>
+                      <div className="text-[10px] text-slate-400">Email:</div>
+                      <div className="font-bold text-white truncate max-w-[160px]">{cardProfile.email || 'Chưa cập nhật'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Primary Card Button: Download vCard directly */}
+                <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={handleDownloadMyVCard}
+                    className="w-full sm:w-1/2 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-slate-700 transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Tải file vCard (.vcf) của bạn</span>
+                  </button>
+
+                  <a
+                    href={`/card/${currentUser?.uid || 'member'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-1/2 py-2.5 bg-gradient-to-r from-[#FF2D55] to-[#E01E45] hover:from-[#E01E45] hover:to-[#C01538] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Mở Trang Danh Thiếp Online</span>
+                  </a>
+                </div>
+
+                <div className="text-[11px] text-slate-400 flex items-center justify-between pt-3">
+                  <span>Hỗ trợ chuẩn iOS Contact &amp; Android vCard 3.0</span>
                   <span className="text-slate-300 font-semibold">Tự động đồng bộ vĩnh viễn</span>
                 </div>
               </div>

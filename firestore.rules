@@ -63,5 +63,15 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // =========================================================
+    // 7. Business Digital Cards Collection
+    // =========================================================
+    match /business_cards/{cardId} {
+      // Public read for scanning QR and opening digital card
+      allow read: if true;
+      // Allow owner to update card details
+      allow write: if true;
+    }
+
   }
 }
